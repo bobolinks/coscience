@@ -1,0 +1,35 @@
+#shortcutKeyBoard {
+  display: none;
+  position: absolute;
+  background: rgba(25, 190, 107, 0.1);
+  margin: 0;
+  padding: 0;
+  left: 0px;
+  top: 0px;
+  width: 100vw;
+  height: 100vh;
+  z-index: 10000;
+  pointer-events: none;
+}
+
+kbd {
+  background-color: #eee;
+  border-radius: 3px;
+  border: 1px solid #b4b4b4;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2), 0 2px 0 0 rgba(255, 255, 255, 0.7) inset;
+  color: #333;
+  display: inline-block;
+  font-size: 0.85em;
+  font-weight: 700;
+  line-height: 1;
+  padding: 2px 4px;
+  white-space: nowrap;
+}
+
+.kbd-on-meta::before {
+  content: '⌘';
+}
+
+.kbd-on-shift::after {
+  content: '⇧';
+}

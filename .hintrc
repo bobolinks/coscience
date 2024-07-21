@@ -1,0 +1,10 @@
+{
+  "extends": [
+    "development"
+  ],
+  "hints": {
+    "typescript-config/consistent-casing": "off",
+    "axe/text-alternatives": "off",
+    "no-inline-styles": "off"
+  }
+}
