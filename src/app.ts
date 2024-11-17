@@ -1,13 +1,16 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { App } from 'vue';
-import { Router, } from "vue-router";
-import { Store } from 'vuex';
-import state, { store } from './store';
-import actions from './actions';
+import type { Pinia } from 'pinia';
+import { dsp } from './dsp';
+import './graphics/elements/props';
+import cache from './graphics/elements/cache';
+import { init } from './tslib';
+import './hnet';
 
 export default {
-  async beforeLaunch(app: App, store: Store<typeof state>, router: Router) {
+  async beforeLaunch(store: Pinia) {
+    dsp.init();
+    init();
+    await cache.loadFont('/assets/fonts/STFangsong.ttf');
   },
-  async onLaunched(app: App, store: Store<typeof state>, router: Router) {
-  },
+  async onLaunched(store: Pinia) { }
 };

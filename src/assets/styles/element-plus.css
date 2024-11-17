@@ -1,0 +1,66 @@
+html.dark {
+  /* 自定义深色背景颜色 */
+  --el-bg-color: rgb(56, 62, 70);
+  --el-text-color-regular: #17233d;
+}
+
+.el-dialog {
+  --el-dialog-padding-primary: 0 !important;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.el-dialog__header {
+  all: unset;
+}
+
+.el-dialog.el-dialog--center {
+  overflow: hidden;
+}
+
+.el-dialog__header {
+  font-size: 1.2rem;
+  font-weight: 500;
+  height: var(--topbar-height);
+  line-height: var(--topbar-height);
+  color: #333;
+  padding-left: 0.5em;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.el-dialog__header .el-dialog__title {
+  font-size: 1.2rem;
+}
+
+.el-dialog__headerbtn {
+  width: 32px !important;
+  height: 32px !important;
+  position: relative !important;
+}
+
+.el-dialog__headerbtn .el-dialog__close {
+  border-radius: 10px;
+  border: none;
+}
+
+.el-dialog__header.show-close {
+  padding-right: unset !important;
+}
+
+.el-dialog__body {
+  background: var(--background-color-pane-body);
+  margin: 0 6px;
+  padding: 2rem;
+  border-radius: 4px;
+}
+
+.el-dialog__footer {
+  text-align: center;
+}
+
+.el-timeline-item__tail {
+  border-left: 1px dashed var(--el-timeline-node-color) !important;
+}

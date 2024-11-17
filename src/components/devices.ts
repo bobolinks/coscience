@@ -7,7 +7,7 @@ type ResolutionInfo = {
   };
 };
 
-export type ResolutionName = 'auto' | '1080p' | '720p';
+export type ResolutionName = 'auto' | '1080p' | '720p' | 'thumb';
 
 type Resolutions = {
   [key in ResolutionName]: ResolutionInfo;
@@ -28,6 +28,11 @@ export const resolutions: Resolutions = {
     value: '720p',
     label: '720p',
     dimension: { width: '1280px', height: '720px' },
+  },
+  'thumb': {
+    value: 'thumb',
+    label: '缩略图（360 x 240）',
+    dimension: { width: '360px', height: '240px' },
   },
 };
 

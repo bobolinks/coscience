@@ -14,4 +14,7 @@ export default {
   error(...args: any[]) {
     console.error(...args);
   },
+  panic(...args: any[]) {
+    console.error(...args);
+  },
 };

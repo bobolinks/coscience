@@ -6,6 +6,97 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "167445",
+      "name": "new",
+      "font_class": "new",
+      "unicode": "e61d",
+      "unicode_decimal": 58909
+    },
+    {
+      "icon_id": "23467568",
+      "name": "OPEN",
+      "font_class": "open",
+      "unicode": "ea3e",
+      "unicode_decimal": 59966
+    },
+    {
+      "icon_id": "1433737",
+      "name": "fire",
+      "font_class": "fire",
+      "unicode": "e63a",
+      "unicode_decimal": 58938
+    },
+    {
+      "icon_id": "10132235",
+      "name": "龙族",
+      "font_class": "dragon-circle",
+      "unicode": "e7ea",
+      "unicode_decimal": 59370
+    },
+    {
+      "icon_id": "12053937",
+      "name": "dragon",
+      "font_class": "dragon",
+      "unicode": "e608",
+      "unicode_decimal": 58888
+    },
+    {
+      "icon_id": "141944",
+      "name": "remove",
+      "font_class": "remove",
+      "unicode": "e854",
+      "unicode_decimal": 59476
+    },
+    {
+      "icon_id": "8953296",
+      "name": "top-arrow-to-top",
+      "font_class": "to-top",
+      "unicode": "e83d",
+      "unicode_decimal": 59453
+    },
+    {
+      "icon_id": "2175982",
+      "name": "top",
+      "font_class": "rocket",
+      "unicode": "e71e",
+      "unicode_decimal": 59166
+    },
+    {
+      "icon_id": "6223807",
+      "name": "top",
+      "font_class": "top1",
+      "unicode": "e67d",
+      "unicode_decimal": 59005
+    },
+    {
+      "icon_id": "27555308",
+      "name": "top",
+      "font_class": "top2",
+      "unicode": "e911",
+      "unicode_decimal": 59665
+    },
+    {
+      "icon_id": "28525827",
+      "name": "top",
+      "font_class": "top3",
+      "unicode": "e61c",
+      "unicode_decimal": 58908
+    },
+    {
+      "icon_id": "7214904",
+      "name": "Calendar",
+      "font_class": "Calendar",
+      "unicode": "e6ce",
+      "unicode_decimal": 59086
+    },
+    {
+      "icon_id": "32649959",
+      "name": "资本市场",
+      "font_class": "bag",
+      "unicode": "e619",
+      "unicode_decimal": 58905
+    },
+    {
       "icon_id": "4889717",
       "name": "买入",
       "font_class": "buy",
@@ -622,13 +713,6 @@
       "unicode_decimal": 58884
     },
     {
-      "icon_id": "7683834",
-      "name": "new",
-      "font_class": "new",
-      "unicode": "e623",
-      "unicode_decimal": 58915
-    },
-    {
       "icon_id": "9229181",
       "name": "index",
       "font_class": "index",
@@ -652,7 +736,7 @@
     {
       "icon_id": "12907985",
       "name": "search close",
-      "font_class": "close",
+      "font_class": "close-circle",
       "unicode": "e60e",
       "unicode_decimal": 58894
     },
@@ -841,7 +925,7 @@
     {
       "icon_id": "399081",
       "name": "remove",
-      "font_class": "remove",
+      "font_class": "close",
       "unicode": "e6f4",
       "unicode_decimal": 59124
     },

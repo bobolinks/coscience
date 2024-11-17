@@ -43,7 +43,7 @@ defineProps({
   display: flex;
   flex-direction: row;
   align-items: center;
-  padding: 4px 0.8em;
+  padding: 2px 0.8em;
   border-left: 1px solid var(--border-color-divider-pane);
   cursor: pointer;
 }

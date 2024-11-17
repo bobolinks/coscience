@@ -1,29 +1,23 @@
 <template>
-  <div class="root-container">
-    <topbar></topbar>
-    <RouterView></RouterView>
+  <div class="root">
+    <Timeline class="panel-left"></Timeline>
+    <Main class="main" style="flex: 1 1 auto; padding-left: 0"></Main>
   </div>
 </template>
-<script lang="ts" setup>
-import topbar from '../components/topbar.vue';
+
+<script setup lang="ts">
+import Timeline from '../components/timeline.vue';
+import Main from '../components/main.vue';
 </script>
+
 <style scoped>
-.root-container {
-  width: 100%;
-  min-width: var(--full-width);
-  height: 100vh;
+.root {
   min-height: 100vh;
   max-height: 100vh;
-  overflow: scroll;
+  min-width: var(--full-width);
+  max-width: var(--full-width);
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: stretch;
-  background-color: var(--background-color-default);
-}
-.root-container > div:nth-child(2) {
-  height: var(--main-height);
-  max-height: var(--main-height);
-  min-height: var(--main-height);
-  box-sizing: border-box;
 }
 </style>

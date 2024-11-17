@@ -1,0 +1,18 @@
+.timeline {
+  min-width: 280px;
+  max-width: 280px;
+}
+
+.main {
+  min-width: 400px;
+  flex: 1 1 auto;
+}
+
+.panels {
+  min-width: 400px;
+  max-width: 400px;
+  padding: 10px;
+  background-color: white;
+  overflow: scroll;
+  max-height: 100vh;
+}

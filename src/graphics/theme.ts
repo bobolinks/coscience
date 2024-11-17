@@ -1,0 +1,10 @@
+export const White = '#ffffff';
+export const Red = 'rgb(235, 67, 79)';
+export const Green = 'rgb(99, 197, 130)';
+export const LightGreen = '#aaffaa';
+export const Blue = 'rgb(89, 147, 237)';
+export const Golden = 'rgb(255, 215, 0)';
+export const Orange = 'rgb(255, 128, 0)';
+export const Pink = 'rgb(128, 0, 128)';
+export const Gray = '#C8C8C8';
+export const DarkGray = 'rgb(64, 64, 64)';

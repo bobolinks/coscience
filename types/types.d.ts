@@ -27,6 +27,9 @@ declare type Char<Len> = string;
 declare type Varchar<Len> = string;
 declare type Json = Record<string, any>;
 
+declare type ColorType = number | string | Color;
+declare type Colors = Array<ColorType>;
+
 declare type PropDecoration = {
   type: dtype;
   description: string;

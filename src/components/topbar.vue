@@ -1,7 +1,7 @@
 <template>
   <div class="topbar" style="width: auto">
     <div class="topbtns" style="align-items: center; display: flex; flex-direction: row">
-      <i class="iconfont icon-translate" @click="router.push('/index')"></i>
+      <i class="iconfont icon-translate" @click="router.push('/')"></i>
     </div>
     <Alert class="topbar-center" />
     <div class="topbar-action-group">
