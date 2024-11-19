@@ -12,6 +12,9 @@
     <div ref="outline" class="outline" :floating="isFloating">
       <canvas ref="canvas" class="canvas"></canvas>
       <label class="text-nowrap subtitle">{{ worldProps.subtitle }}</label>
+      <video id="videoShared" loop crossOrigin="anonymous" playsinline style="display: none">
+        <source src="/assets/textures/sintel.mp4" />
+      </video>
     </div>
   </div>
 </template>
@@ -24,6 +27,7 @@ import { World } from '../graphics/world';
 import { useDataStore } from '../stores/data';
 import { type ResolutionName, resoList, resolutions } from './devices';
 import { dsp } from '../dsp';
+import slides from '@/core/slides';
 
 type Action = 'snapshot' | 'maximize';
 
@@ -108,6 +112,8 @@ onMounted(() => {
   resizeCanvas();
   if (!dsp.world) {
     dsp.world = new World(canvas.value!, worldProps.value);
+    const cls = slides[store.currentSlideIndex];
+    dsp.world.setScene(new cls());
     dsp.world.run();
   }
 });
@@ -190,5 +196,10 @@ onUnmounted(() => {
 :root {
   --dev-width: 100%;
   --dev-height: 100%;
+}
+#videoShared {
+  position: absolute;
+  width: 1280px;
+  height: 720px;
 }
 </style>

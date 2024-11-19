@@ -1,12 +1,12 @@
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { defineStore } from 'pinia';
 
 export const appName = 'coscience';
 
 export const useDataStore = defineStore('data', () => {
   const isDirty = ref<boolean>();
-  const current = ref<Slide | null>();
-  const stats = ref<{}>({});
+  const slideTouch = ref<number>(Number.parseInt(localStorage.getItem('slideTouch') || '0'));
+  const currentSlideIndex = ref<number>(0);
   const isAdmin = ref<boolean>(false);
 
   const query = location.search;
@@ -18,5 +18,9 @@ export const useDataStore = defineStore('data', () => {
     }
   }
 
-  return { isDirty, current };
+  watch(slideTouch, () => {
+    localStorage.setItem('slideTouch', `${slideTouch.value}`);
+  });
+
+  return { isDirty, currentSlideIndex, slideTouch };
 });

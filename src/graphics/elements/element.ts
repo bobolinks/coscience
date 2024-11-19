@@ -7,7 +7,10 @@ import { propsProxy } from './props';
 export const defaultAnimationGroup: Group = new Group();
 
 export type Vec3Like = { x: number; y: number; z: number; };
-export type PropsLike = {};
+export type PropsLike = {
+  touchable?: boolean;
+  dragable?: boolean;
+};
 export type AttrsLike = {
   position: Vec3Like;
   scale: Vec3Like;
@@ -23,9 +26,6 @@ type AnimationTask<T> = {
 };
 
 export type ElementEventMap = {
-  touchstart: Vector2;
-  touchmove: Vector2;
-  touchend: Vector2;
   tap: Vector2;
 }
 
@@ -34,16 +34,18 @@ let EIDAutoInc = 1;
 export class Element<T extends Object3D = Object3D, P extends PropsLike = PropsLike, A extends AttrsLike = AttrsLike, E extends ElementEventMap = ElementEventMap> extends EventEmitter<E> {
   public readonly isElement = true;
   public readonly id = EIDAutoInc++;
-  public readonly props: Required<P>;
+  public readonly props: P;
   public readonly children: Element[] = [];
   public readonly parent: Element | undefined;
 
   private aniCur: AnimationTask<A> | undefined;
   private aniQue: Array<AnimationTask<A>> = [];
 
-  constructor(public readonly native: T, props: Required<P>) {
+  constructor(public readonly native: T, props: P) {
     super();
-    this.props = propsProxy(props, this);
+    this.props = propsProxy({ touchable: false, dragable: false, ...props }, this);
+
+    this.native.userData.owner = this;
   }
 
   get position() {
@@ -103,7 +105,7 @@ export class Element<T extends Object3D = Object3D, P extends PropsLike = PropsL
     // do nothings
   }
 
-  protected applyAnimation(attrs: A) {
+  protected applyAnimation(attrs: Partial<A>) {
     // do nothings
   }
 

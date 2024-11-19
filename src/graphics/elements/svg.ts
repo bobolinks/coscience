@@ -4,9 +4,9 @@ import { SVGLoader, type SvgNode } from '../three/loaders/SVGLoader';
 import { colorWith } from '../utils';
 import cache from './cache';
 import { MeshClipNodeMaterial } from '../three/materials/clipmat';
-import { Element, type AttrsLike } from './element';
+import { Element, type AttrsLike, type PropsLike } from './element';
 
-export type SvgProps = {
+export type SvgProps = PropsLike & {
   src: string;
   opacity: number;
   fillColor: ColorType;

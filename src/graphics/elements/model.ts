@@ -1,9 +1,5 @@
 import { Box3, Group, Vector3, Mesh } from "three/webgpu";
-import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { Element, type AttrsLike, type ElementEventMap, type PropsLike } from "./element";
-
-const dracoLoader = new DRACOLoader();
-dracoLoader.setDecoderPath('/draco/');
 
 export type ModelProps = PropsLike & {
   size: number;
@@ -11,7 +7,7 @@ export type ModelProps = PropsLike & {
 
 export class Model<O extends Mesh | Group = Group, P extends ModelProps = ModelProps, A extends AttrsLike = AttrsLike, E extends ElementEventMap = ElementEventMap> extends Element<Group, P, A, E> {
   protected scaleGroup = new Group;
-  constructor(protected model: O, props: Required<P>) {
+  constructor(protected model: O, props: P) {
     super(new Group, props);
     this.scaleGroup.add(model);
     this.native.add(this.scaleGroup);

@@ -32,7 +32,7 @@ export class Character<Actions extends '' = '', P extends CharProps = CharProps,
   protected _mixer?: AnimationMixer;
   protected _clips: Array<AnimationClip> = [];
 
-  constructor(props: Required<P>) {
+  constructor(props: P) {
     super(new Group(), props);
     this.loadModel();
   }

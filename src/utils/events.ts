@@ -78,7 +78,7 @@ export class EventEmitter<TEventMap extends {} = {}> {
    * Fire an event type.
    * @param event The event that gets fired.
    */
-  emit<T extends Extract<keyof TEventMap, string>>(type: T, event: TEventMap[T]): void {
+  emit<T extends Extract<keyof TEventMap, string>>(type: T, event?: TEventMap[T]): void {
     if (this._listeners === undefined) return;
 
     const listeners = this._listeners;

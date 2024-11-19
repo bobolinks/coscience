@@ -1,9 +1,9 @@
 import type { Mesh as Mesh3d } from "three/webgpu";
-import { Element, type AttrsLike, type ElementEventMap } from "./element";
+import { Element, type AttrsLike, type ElementEventMap, type PropsLike } from "./element";
 import cache from "./cache";
 import { colorWith } from "../utils";
 
-export type MeshProps = {
+export type MeshProps = PropsLike & {
   opacity: number;
   color: ColorType;
 }

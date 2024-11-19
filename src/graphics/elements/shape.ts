@@ -16,7 +16,7 @@ export class Shape<T extends Mesh3d = Mesh3d, P extends ShapeProps = ShapeProps,
   private _fields = new Set<string>();
   private _fieldsBuilding = false;
 
-  constructor(native: T, props: Required<P>) {
+  constructor(native: T, props: P) {
     super(native, props);
     this.border = new Line2(undefined, new Line2NodeMaterial({ opacity: this.props.opacity, linewidth: this.props.borderWidth, color: colorWith(this.props.borderColor) }));
     this.border.scale.set(1, 1, 1);

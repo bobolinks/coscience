@@ -1,14 +1,15 @@
 import * as THREE from 'three/webgpu';
-import { MathUtils, Clock, PerspectiveCamera, Scene as Scene3D, Mesh, PlaneGeometry, Vector3, AudioListener } from 'three/webgpu';
+import { MathUtils, Clock, Scene as Scene3D, Mesh, AudioListener, Raycaster, Object3D, Vector2, Vector3, type Intersection } from 'three/webgpu';
 import { WebGPURenderer } from 'three/webgpu';
 import { EventEmitter } from '../utils/events';
 import { colorWith } from './utils';
-import { defaultAnimationGroup } from './elements/element';
+import { defaultAnimationGroup, Element } from './elements/element';
 import * as tsl from './three/nodes/tsl';
 import { Sound } from './elements/sound';
 import type { Scene } from './scene';
-import { CenimaCamera } from './camera';
 import { Lights } from './lights';
+import type { Camera } from './elements/camera';
+import { OrbitControls } from 'three/examples/jsm/Addons.js';
 
 export type WorldEvent = 'worldStarted' | 'worldEnded';
 export type WorldEventMap = {
@@ -35,16 +36,27 @@ export class World extends EventEmitter<WorldEventMap> {
   protected readonly renderer: WebGPURenderer;
   protected readonly clock: Clock;
   protected readonly uuid = MathUtils.generateUUID();
-  protected readonly camera: CenimaCamera;
   protected readonly speaker: Sound;
 
   public readonly root: Scene3D;
 
-  protected currentScene?: Scene;
+  protected currentScene?: Scene<Camera>;
 
   protected readonly context: RunContext;
 
   protected working = false;
+
+  /** unit selected */
+  protected selected?: Element<Object3D>;
+  protected selectedPointer: Vector3 = new Vector3();
+  /** for drag */
+  protected dragableUnits: Array<Object3D> = [];
+  protected raycaster = new Raycaster();
+
+  private readonly onMouseDownBinder: (e: MouseEvent) => void;
+  private readonly onMouseUpBinder: (e: MouseEvent) => void;
+
+  private controls?: OrbitControls;
 
   constructor(
     public dom: HTMLCanvasElement,
@@ -65,17 +77,14 @@ export class World extends EventEmitter<WorldEventMap> {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.autoClear = true;
-    this.renderer.toneMapping = THREE.NoToneMapping;
+    this.renderer.toneMapping = THREE.LinearToneMapping;
+    this.renderer.toneMappingExposure = 1;
+    this.renderer.logarithmicDepthBuffer = true;
     this.renderer.setClearColor(colorWith('rgb(30, 31, 35)'));
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.setSize(staticSize.width, staticSize.height);
 
     this.root = new Scene3D();
-
-    const camera = new CenimaCamera(75, window.innerWidth / window.innerHeight, 0.00001, 1000000);
-    camera.position.set(0.5, 0.5, 2);
-    this.camera = camera;
-    this.root.add(camera.native);
 
     // spot light
     const lights = new Lights(0.002);
@@ -107,6 +116,39 @@ export class World extends EventEmitter<WorldEventMap> {
     lights.blue1.visible = true;
     lights.blue.position.z = 1;
     lights.blue1.position.z = -1;
+
+    this.onMouseDownBinder = (e: MouseEvent) => {
+      this.onMouseDown(e);
+    };
+    this.onMouseUpBinder = (e: MouseEvent) => {
+      this.onMouseUp(e);
+    };
+    dom.addEventListener('pointerdown', this.onMouseDownBinder);
+    dom.addEventListener('pointerup', this.onMouseUpBinder);
+  }
+  setScene(scene?: Scene<Camera>) {
+    if (this.currentScene === scene) {
+      return;
+    }
+    if (this.controls) {
+      this.controls.disconnect();
+      this.controls.dispose();
+    }
+    if (this.currentScene) {
+      this.currentScene.emit('leaved');
+      this.currentScene.removeFromParent();
+      this.currentScene.dispose();
+    }
+    this.currentScene = scene;
+    if (this.currentScene) {
+      this.root.add(this.currentScene.native);
+      this.currentScene.resize(staticSize.width, staticSize.height);
+      this.currentScene.emit('entered');
+      const controls = new OrbitControls(this.currentScene.camera.native, this.dom);
+      controls.minDistance = 0;
+      controls.maxDistance = 4;
+      this.controls = controls;
+    }
   }
   resize(width: number, height: number) {
     if (!this.dom) {
@@ -119,8 +161,9 @@ export class World extends EventEmitter<WorldEventMap> {
     this.renderer.setSize(width, height);
     this.renderer.setViewport(0, 0, width, height);
 
-    this.camera.props.aspect = width / height;
-    this.camera.native.updateProjectionMatrix();
+    if (this.currentScene) {
+      this.currentScene.resize(width, height);
+    }
   }
   dispose() {
     const fntrv = (child: any) => {
@@ -142,6 +185,8 @@ export class World extends EventEmitter<WorldEventMap> {
       this.currentScene.traverse(fntrv);
     }
     [this.root].forEach((e) => e.traverse(fntrv));
+    this.dom.removeEventListener('pointerdown', this.onMouseDownBinder);
+    this.dom.removeEventListener('pointerup', this.onMouseUpBinder);
   }
   stop() {
     if (this.working) {
@@ -152,11 +197,13 @@ export class World extends EventEmitter<WorldEventMap> {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private render(delta: number, now: number) {
-    this.renderer.clearDepth();
-    if (this.currentScene) {
-      this.currentScene.update(delta, now, this.renderer, this.currentScene.native, this.camera.native);
+    if (!this.currentScene) {
+      return;
     }
-    this.renderer.render(this.root, this.camera.native);
+    // this.renderer.clearDepth();
+    const camera = this.currentScene.camera.native;
+    this.currentScene.update(delta, now, this.renderer, this.currentScene.native, camera);
+    this.renderer.render(this.root, camera);
   }
 
   async run(): Promise<void> {
@@ -194,4 +241,54 @@ export class World extends EventEmitter<WorldEventMap> {
 
     return await script.call(this, this.context, THREE);
   }
+
+  protected unitFromEvent(e: MouseEvent): Element<Object3D> | undefined {
+    if (!this.currentScene) {
+      return;
+    }
+    const { left, top, width, height } = this.dom.getBoundingClientRect();
+    const pointer = new Vector2((e.clientX - left) / width * 2 - 1, - (e.clientY - top) / height * 2 + 1);
+    this.raycaster.setFromCamera(pointer, this.currentScene.camera.native);
+    const intersections: Intersection<Object3D>[] = [];
+    this.raycaster.intersectObjects([this.currentScene.native], true, intersections);
+    for (const it of intersections) {
+      const unit: Element<Object3D> = elFromObject(it.object);
+      if (unit && (unit.props.dragable || unit.props.touchable)) {
+        return unit;
+      }
+    }
+    return this.currentScene;
+  }
+
+  protected onMouseDown(e: MouseEvent) {
+    const unit = this.unitFromEvent(e);
+    if (unit) {
+      this.selected = unit;
+      this.selectedPointer.copy(unit.position);
+    } else {
+      this.selected = undefined;
+    }
+    if (this.selected?.props.dragable) {
+      this.dragableUnits[0] = this.selected.native;
+    } else {
+      this.dragableUnits.length = 0;
+    }
+  }
+  protected onMouseUp(e: MouseEvent) {
+    const { left, top, width, height } = this.dom.getBoundingClientRect();
+    const pointer = new Vector2((e.clientX - left) / width * 2 - 1, - (e.clientY - top) / height * 2 + 1);
+    const unit = this.unitFromEvent(e);
+    if (unit && unit === this.selected && this.selectedPointer.equals(unit.position)) {
+      unit.emit('tap', pointer);
+    }
+  }
+}
+
+function elFromObject(object: Object3D) {
+  let o: any = object;
+  do {
+    if (o.owner) {
+      return o.owner;
+    }
+  } while ((o = o.parent));
 }
