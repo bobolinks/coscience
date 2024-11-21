@@ -7,7 +7,6 @@ import { defaultAnimationGroup, Element } from './elements/element';
 import * as tsl from './three/nodes/tsl';
 import { Sound } from './elements/sound';
 import type { Scene } from './scene';
-import { Lights } from './lights';
 import type { Camera } from './elements/camera';
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
 
@@ -86,10 +85,6 @@ export class World extends EventEmitter<WorldEventMap> {
 
     this.root = new Scene3D();
 
-    // spot light
-    const lights = new Lights(0.002);
-    this.root.add(lights);
-
     const speaker = new Sound({}, this.listener);
     this.speaker = speaker;
     this.root.add(speaker);
@@ -101,21 +96,6 @@ export class World extends EventEmitter<WorldEventMap> {
         return this.speaker.say(content);
       }
     };
-
-    lights.sun.visible = true;
-    lights.white.visible = true;
-    lights.red.visible = true;
-    lights.red1.visible = true;
-    lights.red.position.x = 1;
-    lights.red1.position.x = -1;
-    lights.green.visible = true;
-    lights.green1.visible = true;
-    lights.green.position.y = 1;
-    lights.green1.position.y = -1;
-    lights.blue.visible = true;
-    lights.blue1.visible = true;
-    lights.blue.position.z = 1;
-    lights.blue1.position.z = -1;
 
     this.onMouseDownBinder = (e: MouseEvent) => {
       this.onMouseDown(e);

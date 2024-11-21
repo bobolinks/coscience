@@ -1,19 +1,19 @@
-import { Mesh, BufferGeometry, MeshBasicNodeMaterial } from 'three/webgpu';
+import { Mesh, MeshBasicNodeMaterial, ShapeGeometry } from 'three/webgpu';
 import { colorWith, createGeometries } from '../utils';
-import { Shape, type ShapeProps } from './shape';
+import { Shape2D, type Shape2DProps } from './shape';
 
-export type RectProps = ShapeProps & {
+export type RectProps = Shape2DProps & {
   width: number;
   height: number;
   borderRadius: number;
   color: ColorType;
 };
 
-export class Rect<T extends RectProps = RectProps> extends Shape<Mesh<BufferGeometry, MeshBasicNodeMaterial>, T> {
+export class Rect<T extends RectProps = RectProps> extends Shape2D<Mesh<ShapeGeometry, MeshBasicNodeMaterial>, T> {
   public readonly isRect = true;
 
   constructor(props?: Partial<T>) {
-    super(new Mesh<BufferGeometry, MeshBasicNodeMaterial>(), {
+    super(new Mesh<ShapeGeometry, MeshBasicNodeMaterial>(), {
       width: 1,
       height: 1,
       borderColor: colorWith('#000'),

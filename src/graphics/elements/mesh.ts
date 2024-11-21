@@ -4,8 +4,8 @@ import cache from "./cache";
 import { colorWith } from "../utils";
 
 export type MeshProps = PropsLike & {
-  opacity: number;
-  color: ColorType;
+  opacity?: number;
+  color?: ColorType;
 }
 
 export type MeshAttrs = AttrsLike & {

@@ -12,6 +12,13 @@ export class Model<O extends Mesh | Group = Group, P extends ModelProps = ModelP
     this.scaleGroup.add(model);
     this.native.add(this.scaleGroup);
 
+    model.traverse(function (o: Mesh) {
+      if (o.isMesh) {
+        o.castShadow = true;
+        o.receiveShadow = true;
+      }
+    } as any);
+
     if (this.props.size && this.props.size !== 1) {
       this.objectAutoSize();
     }
