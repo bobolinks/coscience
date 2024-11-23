@@ -97,11 +97,11 @@ export class Element<T extends Object3D = Object3D, P extends PropsLike = PropsL
     // do nothings
   }
 
-  propGet(k: string) {
+  onGropGet(k: string) {
     // do nothings
   }
 
-  propSet(k: string, value: any) {
+  onPropSet(k: string, value: any) {
     // do nothings
   }
 

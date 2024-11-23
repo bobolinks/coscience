@@ -1,6 +1,7 @@
 import { Camera as Camera3D, Mesh, Scene as Scene3D, type Renderer } from 'three/webgpu';
 import { Element, type AttrsLike, type ElementEventMap, type PropsLike } from './elements/element';
 import { type Camera, OrthographicCamera, PerspectiveCamera } from './elements/camera';
+import type { RunContext } from './runtime';
 
 export type SceneEventMap = ElementEventMap & {
   entered: void;
@@ -9,9 +10,14 @@ export type SceneEventMap = ElementEventMap & {
 
 export class Scene<C extends Camera, P extends PropsLike = PropsLike, A extends AttrsLike = AttrsLike, E extends SceneEventMap = SceneEventMap> extends Element<Scene3D, P, A, E> {
   public readonly size = { width: 0, height: 0 };
+  public readonly runtime: RunContext = {} as any;
 
   constructor(public readonly camera: C, props: P) {
     super(new Scene3D(), props);
+  }
+
+  setupRuntime(context: RunContext) {
+    Object.assign(this.runtime, context);
   }
 
   resize(width: number, height: number) {
@@ -43,6 +49,7 @@ export class Scene<C extends Camera, P extends PropsLike = PropsLike, A extends 
   }
 
   dispose() {
+    this.clearAnimations();
     const fntrv = (el: any) => {
       if (el instanceof Mesh) {
         if (Array.isArray(el.material)) {

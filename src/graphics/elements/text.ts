@@ -6,7 +6,7 @@ import debounce from 'debounce';
 import { Rect, type RectProps } from './rect';
 import type { FontLib, Glyph } from './cache';
 import cache from './cache';
-import { colorWith, numberScale } from '../utils';
+import { colorWith, materialSet, numberScale } from '../utils';
 
 type TextProps = {
   // === Text layout properties: === //
@@ -288,7 +288,7 @@ export class Text extends Rect<Props> {
   private _sync: any;
   private _needSync = true;
 
-  protected fill: Mesh<BufferGeometry, MeshBasicNodeMaterial>;
+  protected textMesh: Mesh<BufferGeometry, MeshBasicNodeMaterial>;
   protected outline: LineSegments<BufferGeometry, LineBasicNodeMaterial>;
   protected root = new Group();
 
@@ -299,22 +299,25 @@ export class Text extends Rect<Props> {
 
     this.native.add(this.root);
 
-    this.fill = new Mesh(
+    this.textMesh = new Mesh(
       new BufferGeometry(),
       new MeshBasicNodeMaterial({
+        opacity: this.props.opacity,
         transparent: true,
-        side: THREE.DoubleSide
+        side: THREE.DoubleSide,
       })
     );
-    this.fill.position.z = 0.0001;
-    this.root.add(this.fill);
+    this.textMesh.renderOrder = this.fill.renderOrder + 1;
+    this.root.add(this.textMesh);
     this.outline = new LineSegments(
       new LineGeometry(),
       new LineBasicNodeMaterial({
+        opacity: this.props.outlineOpacity,
         transparent: true,
         side: THREE.DoubleSide
       })
     );
+    this.outline.renderOrder = this.fill.renderOrder + 2;
     this.root.add(this.outline);
 
     this._sync = debounce(() => {
@@ -347,37 +350,50 @@ export class Text extends Rect<Props> {
     if (this._sync) this._sync();
   }
   protected set color(value: Color) {
-    if (this.fill) this.fill.material.color = value;
+    if (this.textMesh) materialSet(this.textMesh.material, e => e.color = value);
   }
   protected set outlineWidth(value: number | string) {
-    if (this.outline) this.outline.material.linewidth = numberScale(value, this.props.fontSize);
+    if (this.outline) {
+      const v = numberScale(value, this.props.fontSize);
+      materialSet(this.outline.material, e => e.linewidth = v);
+    }
   }
   protected set outlineColor(value: Color) {
-    if (this.outline) this.outline.material.color = value;
+    if (this.outline) materialSet(this.outline.material, e => e.color = value);
   }
   protected set opacity(value: number) {
-    this.material.opacity = value;
-    if (this.fill) this.fill.material.opacity = value;
+    materialSet(this.fill.material, e => e.opacity = value);
+    if (this.textMesh) {
+      materialSet(this.textMesh.material, e => e.opacity = value);
+      materialSet(this.outline.material, e => e.opacity = value);
+    }
   }
   protected set outlineOpacity(value: number) {
-    if (this.outline) this.outline.material.opacity = value;
+    if (this.outline) materialSet(this.outline.material, e => e.opacity = value);
   }
   protected set textAlign(value: TextProps['textAlign']) {
     if (!this.outline) {
       return;
     }
     if (value === 'center') {
-      this.fill.position.x = 0;
+      this.textMesh.position.x = 0;
     } else if (value === 'left') {
       const diff = this.props.width / 2 - this.textSize.width / 2 - this.props.fontSize / 2;
-      this.fill.position.x = -diff;
+      this.textMesh.position.x = -diff;
     } else {
       const diff = this.props.width / 2 - this.textSize.width / 2 - this.props.fontSize / 2;
-      this.fill.position.x = diff;
+      this.textMesh.position.x = diff;
     }
   }
   protected set background(value: ColorType) {
-    const m: any = this.material;
+    if (value === 'none' || value === '') {
+      this.fill.visible = false;
+      return;
+    } else {
+      this.fill.visible = true;
+    }
+
+    const m: any = this.fill.material;
     if (typeof value === 'string' && /^(http|https|data):/.test(value)) {
       cache.loadTexture(value).then((map) => {
         if (Array.isArray(m)) {
@@ -402,6 +418,7 @@ export class Text extends Rect<Props> {
     this.outlineColor = colorWith(this.props.outlineColor);
     this.outlineOpacity = this.props.outlineOpacity;
     this.textAlign = this.props.textAlign;
+    this.background = this.props.background;
   }
   sync() {
     if (!this._needSync) {
@@ -410,7 +427,7 @@ export class Text extends Rect<Props> {
     this._needSync = false;
 
     if (!this.props.text) {
-      this.fill.geometry.drawRange.count = 0;
+      this.textMesh.geometry.drawRange.count = 0;
       this.outline.geometry.drawRange.count = 0;
       return;
     }
@@ -476,20 +493,20 @@ export class Text extends Rect<Props> {
     fill.applyMatrix4(m);
     outline.applyMatrix4(m);
 
-    const fillNew = new Mesh(fill, this.fill.material);
-    fillNew.matrix.copy(this.fill.matrix);
+    const fillNew = new Mesh(fill, this.textMesh.material);
+    fillNew.matrix.copy(this.textMesh.matrix);
     fillNew.matrix.decompose(fillNew.position, fillNew.quaternion, fillNew.scale);
     const outlineNew = new LineSegments(outline, this.outline.material);
     outlineNew.matrix.copy(this.outline.matrix);
     outlineNew.matrix.decompose(fillNew.position, fillNew.quaternion, fillNew.scale);
 
-    this.fill.geometry.dispose();
+    this.textMesh.geometry.dispose();
     this.outline.geometry.dispose();
 
-    this.fill.removeFromParent();
+    this.textMesh.removeFromParent();
     this.outline.removeFromParent();
 
-    this.fill = fillNew;
+    this.textMesh = fillNew;
     this.root.add(fillNew);
     this.outline = outlineNew;
     this.root.add(outlineNew);

@@ -11,16 +11,17 @@
           <i v-else class="icon-stop"></i>
         </div>
       </template>
-      <Code :model-value="data.code"></Code>
+      <Code :model-value="data.code" lang="javascript" @changed="onCodeChanged"></Code>
     </Panel>
   </div>
 </template>
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 import Panel from './elements/panel.vue';
 import Scene from './scene.vue';
 import Code from './elements/code.vue';
 import Segs from './elements/segs.vue';
+import { dsp } from '@/dsp';
 
 const topSegs = [
   { icon: 'icon-json', value: 'code', title: '源码' },
@@ -31,11 +32,29 @@ const topSegs = [
 
 const data = ref({
   isPlaying: false,
-  code: '',
+  code: 'async function main() {\n  //code here\n}',
   curSeg: '',
 });
 
 function onSegChanged() {}
+
+function runCode() {
+  if (dsp.world && data.value.code) {
+    return dsp.world.execute(data.value.code);
+  }
+}
+
+function onCodeChanged(code: string) {
+  data.value.code = code;
+}
+
+onMounted(() => {
+  dsp.addKeyDownListener('meta+r', runCode, 'Code.Run 运行代码');
+});
+
+onUnmounted(() => {
+  dsp.removeKeyDownListener('meta+r', runCode);
+});
 </script>
 <style scoped>
 .main {

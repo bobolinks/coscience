@@ -9,6 +9,7 @@ import { Sound } from './elements/sound';
 import type { Scene } from './scene';
 import type { Camera } from './elements/camera';
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
+import type { RunContext } from './runtime';
 
 export type WorldEvent = 'worldStarted' | 'worldEnded';
 export type WorldEventMap = {
@@ -19,11 +20,6 @@ export type WorldEventMap = {
 export const AsyncFunction: any = (globalThis as any).AsyncFunction || (async (x: any) => x).constructor;
 
 const staticSize = { width: window.innerWidth, height: window.innerHeight };
-
-type RunContext = {
-  tsl: typeof tsl;
-  say: (content: string) => void;
-};
 
 type Props = {
   subtitle: string;
@@ -79,7 +75,7 @@ export class World extends EventEmitter<WorldEventMap> {
     this.renderer.toneMapping = THREE.LinearToneMapping;
     this.renderer.toneMappingExposure = 1;
     this.renderer.logarithmicDepthBuffer = true;
-    this.renderer.setClearColor(colorWith('rgb(30, 31, 35)'));
+    this.renderer.setClearColor(colorWith(0));
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.setSize(staticSize.width, staticSize.height);
 
@@ -124,6 +120,7 @@ export class World extends EventEmitter<WorldEventMap> {
       this.root.add(this.currentScene.native);
       this.currentScene.resize(staticSize.width, staticSize.height);
       this.currentScene.emit('entered');
+      this.currentScene.setupRuntime(this.context);
       const controls = new OrbitControls(this.currentScene.camera.native, this.dom);
       controls.minDistance = 0;
       controls.maxDistance = 4;
@@ -217,9 +214,13 @@ export class World extends EventEmitter<WorldEventMap> {
     this.renderer.setAnimationLoop(step);
   }
   async execute(code: string) {
+    if (!this.currentScene) {
+      return;
+    }
+
     const script = new AsyncFunction(['context', 'THREE'], `with(context) { ${code} \nawait main(); }`);
 
-    return await script.call(this, this.context, THREE);
+    return await script.call(this, this.currentScene.runtime, THREE);
   }
 
   protected unitFromEvent(e: MouseEvent): Element<Object3D> | undefined {

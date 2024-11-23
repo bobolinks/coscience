@@ -3,33 +3,35 @@ import { Slide } from "../slide";
 import { DRACOLoader, GLTFLoader } from "three/examples/jsm/Addons.js";
 import { AmbientLight, DirectionalLight, ExtrudeGeometry, FrontSide, Mesh as Mesh3D, MeshPhysicalNodeMaterial, PlaneGeometry, SpotLight, Vector2, type Group } from "three/webgpu";
 import { Electric } from "../electric";
-import { Mesh } from "@/graphics/elements/mesh";
-import { LightMesh, Lights } from '../../graphics/lights';
+import { LightElement, LightMesh, Lights } from '../../graphics/lights';
 import { Green, White } from "../theme";
 import { ShapeCircle } from "@/graphics/elements/shapes";
+import { Text } from "@/graphics/elements/text";
 
 const dracoLoader = new DRACOLoader();
 dracoLoader.setDecoderPath('/draco/');
 
 export default class extends Slide {
+  private subtitle: Text;
+
   constructor() {
     super(new PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.00001, 10000), { touchable: true });
     this.camera.position.set(0, 0.5, 2);
 
     // lights
-    const ambient = new AmbientLight(0x404040, 3);
+    const ambient = new LightElement(new AmbientLight(0x404040, 3), { intensity: 3 });
 
-    const light = new DirectionalLight(White, 3);
+    const light = new LightElement(new DirectionalLight(White, 3), { intensity: 3 });
     light.position.set(1, 5, 1);
-    light.castShadow = true;
-    light.shadow.camera.near = 0.01;
-    light.shadow.camera.far = 20;
-    light.shadow.camera.right = 20;
-    light.shadow.camera.left = - 20;
-    light.shadow.camera.top = 20;
-    light.shadow.camera.bottom = - 20;
-    light.shadow.mapSize.width = 1024;
-    light.shadow.mapSize.height = 1024;
+    light.native.castShadow = true;
+    light.native.shadow.camera.near = 0.01;
+    light.native.shadow.camera.far = 20;
+    light.native.shadow.camera.right = 20;
+    light.native.shadow.camera.left = - 20;
+    light.native.shadow.camera.top = 20;
+    light.native.shadow.camera.bottom = - 20;
+    light.native.shadow.mapSize.width = 1024;
+    light.native.shadow.mapSize.height = 1024;
 
     const spot = new SpotLight(White, 3);
     spot.angle = Math.PI / 5;
@@ -41,10 +43,16 @@ export default class extends Slide {
     spot.shadow.mapSize.width = 1024;
     spot.shadow.mapSize.height = 1024;
 
-    const mesh = new LightMesh(spot, { size: 0.001, color: Green });
+    const mesh = new LightMesh(spot, { intensity: 3, size: 0.001, color: Green });
     mesh.position.set(0.5, 0.5, -0.5);
     const lights = new Lights({ ambient, light, spot: mesh });
-    this.native.add(lights);
+    lights.intensity = 0;
+    this.add(lights);
+
+    const subtitle = new Text({ text: '电脑无处不在...', width: 0.3, height: 0.1, borderRadius: 0.02, background: 'none' });
+    subtitle.position.z = 1;
+    this.subtitle = subtitle;
+    this.add(subtitle);
 
     this.load();
   }

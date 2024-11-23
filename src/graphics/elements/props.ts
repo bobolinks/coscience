@@ -2,8 +2,8 @@
 export const getProxyRawObject = Symbol('getProxyRawObject');
 
 interface Observor {
-  propGet(k: string): void;
-  propSet(k: string, value: any): void;
+  onGropGet(k: string): void;
+  onPropSet(k: string, value: any): void;
 }
 
 export function propsProxy(props: any, observor: Observor) {
@@ -23,7 +23,7 @@ export function propsProxy(props: any, observor: Observor) {
         }
         return o;
       }
-      observor.propGet(p);
+      observor.onGropGet(p);
       return Reflect.get(target, p, receiver);
     },
     set: (target, p, newValue, receiver) => {
@@ -45,10 +45,10 @@ export function propsProxy(props: any, observor: Observor) {
         if (o[lastName] === newValue) {
           return true;
         }
-        observor.propSet(p, newValue);
+        observor.onPropSet(p, newValue);
         o[lastName] = newValue;
       } else {
-        observor.propSet(p, newValue);
+        observor.onPropSet(p, newValue);
         rv = Reflect.set(target, p, newValue, target);
       }
       if (rv) {

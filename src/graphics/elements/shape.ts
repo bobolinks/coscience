@@ -1,29 +1,29 @@
-import { ExtrudeGeometry, Line2NodeMaterial, ShapeGeometry, type ExtrudeGeometryOptions, type Mesh as Mesh3d } from "three/webgpu";
-import { type ElementEventMap } from "./element";
+import { ExtrudeGeometry, Group, Mesh as Mesh3d, ShapeGeometry, type ExtrudeGeometryOptions } from "three/webgpu";
+import { Element, type AttrsLike, type ElementEventMap, type PropsLike } from "./element";
 import { Mesh, type MeshAttrs, type MeshProps } from "./mesh";
-import { Line2 } from "../three/webgpu/Line2";
-import { colorWith } from "../utils";
+import { colorWith, materialSet } from "../utils";
+import cache from "./cache";
 
-export type Shape2DProps = MeshProps & {
-  borderColor: ColorType;
-  borderWidth: number;
+export type Shape2DProps = PropsLike & {
+  opacity?: number;
+  color?: ColorType;
 }
 
-export class Shape2D<T extends Mesh3d<ShapeGeometry> = Mesh3d<ShapeGeometry>, P extends Shape2DProps = Shape2DProps, A extends MeshAttrs = MeshAttrs, E extends ElementEventMap = ElementEventMap> extends Mesh<T, P, A, E> {
-  protected border: Line2;
+export type ShapeAttrs = AttrsLike & {
+  opacity: number;
+  color: number;
+}
+
+
+export class Shape2D<F extends Mesh3d<ShapeGeometry> = Mesh3d<ShapeGeometry>, P extends Shape2DProps = Shape2DProps, A extends ShapeAttrs = ShapeAttrs, E extends ElementEventMap = ElementEventMap> extends Element<Group, P, A, E> {
+  public fill!: F;
 
   private _needReshapes = false;
   private _fields = new Set<string>();
   private _fieldsBuilding = false;
 
-  constructor(native: T, props: P) {
-    super(native, props);
-    this.border = new Line2(undefined, new Line2NodeMaterial({ opacity: this.props.opacity, linewidth: this.props.borderWidth, color: colorWith(this.props.borderColor) }));
-    this.border.scale.set(1, 1, 1);
-    this.border.position.z += 0.001;
-    this.border.material.worldUnits = false;
-    this.border.material.transparent = true;
-    this.native.add(this.border);
+  constructor(public readonly fillMaterial: F['material'], props: P) {
+    super(new Group(), props);
 
     this._fieldsBuilding = true;
     this.reshape();
@@ -31,29 +31,43 @@ export class Shape2D<T extends Mesh3d<ShapeGeometry> = Mesh3d<ShapeGeometry>, P 
   }
 
   protected set opacity(value: number) {
-    if (Array.isArray(this.material)) {
-      this.material.forEach(e => e.opacity = value);
+    materialSet(this.fillMaterial, (e) => e.opacity = value);
+  }
+
+  protected set color(value: ColorType) {
+    if (value === 'none' || value === '') {
+      this.fill.visible = false;
+      return;
     } else {
-      this.material.opacity = value;
+      this.fill.visible = true;
     }
-    this.border.material.opacity = value;
+    const m: any = this.fillMaterial;
+    if (typeof value === 'string' && /^(http|https|data):/.test(value)) {
+      cache.loadTexture(value).then((map) => {
+        if (Array.isArray(m)) {
+          m.forEach(e => e.map = map);
+        } else {
+          m.map = map;
+        }
+      });
+    } else {
+      const color = colorWith(value);
+      if (Array.isArray(m)) {
+        m.forEach(e => e.color = color);
+      } else {
+        m.color = color;
+      }
+    }
   }
 
-  protected set borderColor(value: ColorType) {
-    this.border.material.color = colorWith(value);
-  }
-  protected set borderWidth(value: number) {
-    this.border.material.lineWidth = value;
-  }
-
-  propGet(k: string) {
+  onGropGet(k: string) {
     if (!this._fieldsBuilding) {
       return;
     }
     this._fields.add(k);
   }
 
-  propSet(k: string, value: any): void {
+  onPropSet(k: string, value: any): void {
     if (!this._fields.has(k)) {
       return;
     }
@@ -63,8 +77,22 @@ export class Shape2D<T extends Mesh3d<ShapeGeometry> = Mesh3d<ShapeGeometry>, P 
     }
   }
 
+  protected createShapes(): F {
+    return new Mesh3d() as any;
+  }
+
   protected reshape() {
-    // do nothings
+    const fill = this.createShapes();
+
+    if (this.fill) {
+      const g = fill.geometry;
+      fill.copy(this.fill);
+      fill.geometry = g;
+      this.fill.removeFromParent();
+      this.fill.geometry.dispose();
+    }
+    this.fill = fill;
+    this.native.add(fill);
   }
 
   private delayReshape() {
@@ -94,14 +122,14 @@ export class Shape<T extends Mesh3d<ExtrudeGeometry> = Mesh3d<ExtrudeGeometry>, 
     this._fieldsBuilding = false;
   }
 
-  propGet(k: string) {
+  onPropGet(k: string) {
     if (!this._fieldsBuilding) {
       return;
     }
     this._fields.add(k);
   }
 
-  propSet(k: string, value: any): void {
+  onPropSet(k: string, value: any): void {
     if (!this._fields.has(k)) {
       return;
     }

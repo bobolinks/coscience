@@ -2,7 +2,7 @@
   <el-timeline class="timeline" style="max-width: 600px">
     <el-timeline-item class="guiding" center :icon="Guide" color="#fff"></el-timeline-item>
     <el-timeline-item v-for="(it, index) in activities" :key="index" center :icon="it.icon" :type="it.type" size="large" placement="top">
-      <labe class="title" :selected="index === store.currentSlideIndex">{{ it.title }}</labe>
+      <label class="title" :selected="index === store.currentSlideIndex">{{ it.title }}</label>
       <el-image class="thumb" :src="`/assets/images/slide-${index}.png`" @click="select(index)">
         <template #error>
           <div class="image-slot">

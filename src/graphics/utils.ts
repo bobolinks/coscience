@@ -2,6 +2,8 @@ import * as THREE from 'three/webgpu';
 import { Color, Group, Mesh, MeshBasicMaterial, Shape, ShapeGeometry } from 'three/webgpu';
 import { LineGeometry, SVGLoader } from 'three/examples/jsm/Addons.js';
 
+type ExtractArrayElementType<T> = T extends Array<infer E> ? E : T;
+
 export function colorWith(color: Color | number | string): Color {
   if (typeof color === 'object') {
     return color;
@@ -11,6 +13,11 @@ export function colorWith(color: Color | number | string): Color {
     return new Color();
   }
   return new Color().setStyle(color); //.convertSRGBToLinear();
+}
+
+export function materialSet<T extends THREE.Material | THREE.Material[] = THREE.Material>(m: T, cb: (m: ExtractArrayElementType<T>) => void) {
+  const ar = Array.isArray(m) ? m : [m];
+  ar.forEach(cb);
 }
 
 export async function loadSvg(url: string, drawFillShapes?: boolean, fillShapesWireframe?: boolean, drawStrokes?: boolean, strokesWireframe?: boolean): Promise<Group> {
@@ -120,7 +127,7 @@ export function createRoundRect(w: number, h: number, border: number, radius: nu
   return new Mesh<ShapeGeometry, MeshBasicMaterial>(outsideGeo).add(inside);
 }
 
-export function createGeometries(w: number, h: number, radius: number) {
+export function createGeometries(w: number, h: number, radius: number): { fill: ShapeGeometry; stroke: LineGeometry; } {
   const shape = new Shape();
   const ww = w / 2;
   const hh = h / 2;
@@ -134,10 +141,10 @@ export function createGeometries(w: number, h: number, radius: number) {
   shape.lineTo(-ww, hh - radius);
   shape.quadraticCurveTo(-ww, hh, -ww + radius, hh);
 
+  // const points = [new THREE.Vector2(0, 0), new THREE.Vector2(0.5, 0.5), new THREE.Vector2(1, 1)];
   const points = shape.getPoints();
   const fill = new ShapeGeometry(shape);
-  const line = new LineGeometry().setPositions(points.map((e) => [e.x, e.y, 0]).flat());
-  line.instanceCount = points.length / 3 - 1;
+  const stroke = new LineGeometry().setPositions(points.map((e) => [e.x, e.y, 0]).flat());
 
   // update uv
   const uv = fill.attributes.uv.array as Float32Array;
@@ -151,9 +158,7 @@ export function createGeometries(w: number, h: number, radius: number) {
     }
   }
 
-  fill.userData.line = line;
-
-  return fill;
+  return { fill, stroke };
 }
 
 export function numberScale(value: string | number, ref: number): number {
