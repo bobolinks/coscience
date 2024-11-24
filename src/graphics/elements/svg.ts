@@ -210,6 +210,8 @@ export class Svg extends Element<Group, SvgProps, Attrs> {
   }
 
   dispose() {
+    super.dispose();
+
     this.fillMaterial.dispose();
     this.strokeMaterial.dispose();
     this.subFillMaterials.forEach((e) => e.dispose());

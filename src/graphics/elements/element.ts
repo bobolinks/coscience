@@ -84,6 +84,11 @@ export class Element<T extends Object3D = Object3D, P extends PropsLike = PropsL
     return this.parent.remove(this);
   }
 
+  dispose() {
+    this.clearAnimations();
+    this.children.forEach(child => child.dispose());
+  }
+
   traverse(cb: (el: Element) => void) {
     cb(this);
     const fn = (child: Element) => {
@@ -124,17 +129,17 @@ export class Element<T extends Object3D = Object3D, P extends PropsLike = PropsL
         reject
       });
       this.execAni();
-    }).catch(() => { });
+    }).catch((code?: number) => { if (code) throw code; });
   }
 
-  clearAnimations() {
+  clearAnimations(code?: number) {
     if (this.aniCur) {
       this.aniCur.tween!.stop();
-      this.aniCur.reject();
+      this.aniCur.reject(code);
       this.aniCur = undefined;
     }
     if (this.aniQue) {
-      this.aniQue.forEach((e) => e.reject());
+      this.aniQue.forEach((e) => e.reject(code));
       this.aniQue.length = 0;
     }
   }

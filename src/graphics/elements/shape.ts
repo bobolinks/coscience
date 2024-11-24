@@ -1,4 +1,4 @@
-import { ExtrudeGeometry, Group, Mesh as Mesh3d, ShapeGeometry, type ExtrudeGeometryOptions } from "three/webgpu";
+import { ExtrudeGeometry, Group, Mesh as Mesh3D, ShapeGeometry, type ExtrudeGeometryOptions } from "three/webgpu";
 import { Element, type AttrsLike, type ElementEventMap, type PropsLike } from "./element";
 import { Mesh, type MeshAttrs, type MeshProps } from "./mesh";
 import { colorWith, materialSet } from "../utils";
@@ -15,7 +15,7 @@ export type ShapeAttrs = AttrsLike & {
 }
 
 
-export class Shape2D<F extends Mesh3d<ShapeGeometry> = Mesh3d<ShapeGeometry>, P extends Shape2DProps = Shape2DProps, A extends ShapeAttrs = ShapeAttrs, E extends ElementEventMap = ElementEventMap> extends Element<Group, P, A, E> {
+export class Shape2D<F extends Mesh3D<ShapeGeometry> = Mesh3D<ShapeGeometry>, P extends Shape2DProps = Shape2DProps, A extends ShapeAttrs = ShapeAttrs, E extends ElementEventMap = ElementEventMap> extends Element<Group, P, A, E> {
   public fill!: F;
 
   private _needReshapes = false;
@@ -78,7 +78,7 @@ export class Shape2D<F extends Mesh3d<ShapeGeometry> = Mesh3d<ShapeGeometry>, P 
   }
 
   protected createShapes(): F {
-    return new Mesh3d() as any;
+    return new Mesh3D() as any;
   }
 
   protected reshape() {
@@ -103,13 +103,30 @@ export class Shape2D<F extends Mesh3d<ShapeGeometry> = Mesh3d<ShapeGeometry>, P 
       }
     });
   }
+
+  dispose() {
+    super.dispose();
+
+    this.fill.traverse(function (o: Mesh3D) {
+      if (o.isMesh) {
+        if (Array.isArray(o.material)) {
+          o.material.forEach((e) => e.dispose());
+        } else if (o.material) {
+          o.material.dispose();
+        }
+        if (o.geometry) {
+          o.geometry.dispose();
+        }
+      }
+    } as any);
+  }
 }
 
 export type ShapeProps = MeshProps & {
   opts: ExtrudeGeometryOptions;
 };
 
-export class Shape<T extends Mesh3d<ExtrudeGeometry> = Mesh3d<ExtrudeGeometry>, P extends ShapeProps = ShapeProps, A extends MeshAttrs = MeshAttrs, E extends ElementEventMap = ElementEventMap> extends Mesh<T, P, A, E> {
+export class Shape<T extends Mesh3D<ExtrudeGeometry> = Mesh3D<ExtrudeGeometry>, P extends ShapeProps = ShapeProps, A extends MeshAttrs = MeshAttrs, E extends ElementEventMap = ElementEventMap> extends Mesh<T, P, A, E> {
   private _needReshapes = false;
   private _fields = new Set<string>();
   private _fieldsBuilding = false;

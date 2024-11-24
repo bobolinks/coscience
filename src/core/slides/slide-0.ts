@@ -1,7 +1,6 @@
-import { PerspectiveCamera } from "@/graphics/elements/camera";
 import { Slide } from "../slide";
 import { DRACOLoader, GLTFLoader } from "three/examples/jsm/Addons.js";
-import { AmbientLight, DirectionalLight, ExtrudeGeometry, FrontSide, Mesh as Mesh3D, MeshPhysicalNodeMaterial, PlaneGeometry, SpotLight, Vector2, type Group } from "three/webgpu";
+import { AmbientLight, DirectionalLight, ExtrudeGeometry, FrontSide, Mesh as Mesh3D, MeshPhysicalNodeMaterial, SpotLight, Vector2, type Group } from "three/webgpu";
 import { Electric } from "../electric";
 import { LightElement, LightMesh, Lights } from '../../graphics/lights';
 import { Green, White } from "../theme";
@@ -15,8 +14,7 @@ export default class extends Slide {
   private subtitle: Text;
 
   constructor() {
-    super(new PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.00001, 10000), { touchable: true });
-    this.camera.position.set(0, 0.5, 2);
+    super(0, { touchable: true });
 
     // lights
     const ambient = new LightElement(new AmbientLight(0x404040, 3), { intensity: 3 });
@@ -46,7 +44,7 @@ export default class extends Slide {
     const mesh = new LightMesh(spot, { intensity: 3, size: 0.001, color: Green });
     mesh.position.set(0.5, 0.5, -0.5);
     const lights = new Lights({ ambient, light, spot: mesh });
-    lights.intensity = 0;
+    // lights.intensity = 0;
     this.add(lights);
 
     const subtitle = new Text({ text: '电脑无处不在...', width: 0.3, height: 0.1, borderRadius: 0.02, background: 'none' });
@@ -110,6 +108,8 @@ export default class extends Slide {
         video.play();
       }
     });
-
+  }
+  protected getDts(): string {
+    return '';
   }
 }

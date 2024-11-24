@@ -11,6 +11,7 @@ import {
   Object3D,
   Scene,
   Vector3,
+  Mesh as Mesh3D,
   type Renderer
 } from 'three/webgpu';
 import debounce from 'debounce';
@@ -173,5 +174,22 @@ export class Arrow extends Mesh<Line2, Props, Attrs> {
         this._reshape();
       }
     }
+  }
+
+  dispose() {
+    super.dispose();
+
+    this.arrow.traverse(function (o: Mesh3D) {
+      if (o.isMesh) {
+        if (Array.isArray(o.material)) {
+          o.material.forEach((e) => e.dispose());
+        } else if (o.material) {
+          o.material.dispose();
+        }
+        if (o.geometry) {
+          o.geometry.dispose();
+        }
+      }
+    } as any);
   }
 }

@@ -7,9 +7,10 @@ import { defaultAnimationGroup, Element } from './elements/element';
 import * as tsl from './three/nodes/tsl';
 import { Sound } from './elements/sound';
 import type { Scene } from './scene';
-import type { Camera } from './elements/camera';
+import { PerspectiveCamera, } from './elements/camera';
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
 import type { RunContext } from './runtime';
+import { Panel } from './panel';
 
 export type WorldEvent = 'worldStarted' | 'worldEnded';
 export type WorldEventMap = {
@@ -31,11 +32,13 @@ export class World extends EventEmitter<WorldEventMap> {
   protected readonly renderer: WebGPURenderer;
   protected readonly clock: Clock;
   protected readonly uuid = MathUtils.generateUUID();
+  protected readonly camera = new PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.00001, 10000);
   protected readonly speaker: Sound;
 
   public readonly root: Scene3D;
+  public readonly panel: Panel;
 
-  protected currentScene?: Scene<Camera>;
+  protected currentScene?: Scene;
 
   protected readonly context: RunContext;
 
@@ -51,7 +54,7 @@ export class World extends EventEmitter<WorldEventMap> {
   private readonly onMouseDownBinder: (e: MouseEvent) => void;
   private readonly onMouseUpBinder: (e: MouseEvent) => void;
 
-  private controls?: OrbitControls;
+  private controls: OrbitControls;
 
   constructor(
     public dom: HTMLCanvasElement,
@@ -81,12 +84,22 @@ export class World extends EventEmitter<WorldEventMap> {
 
     this.root = new Scene3D();
 
+    this.panel = new Panel(this.camera, dom);
+
+    this.camera.position.set(0, 0.5, 2);
+
     const speaker = new Sound({}, this.listener);
     this.speaker = speaker;
     this.root.add(speaker);
 
+    const controls = new OrbitControls(this.camera.native, this.dom);
+    controls.minDistance = 0;
+    controls.maxDistance = 4;
+    this.controls = controls;
+
     this.context = {
       tsl,
+      camera: this.camera,
       say: (content: string) => {
         this.props.subtitle = content;
         return this.speaker.say(content);
@@ -102,13 +115,9 @@ export class World extends EventEmitter<WorldEventMap> {
     dom.addEventListener('pointerdown', this.onMouseDownBinder);
     dom.addEventListener('pointerup', this.onMouseUpBinder);
   }
-  setScene(scene?: Scene<Camera>) {
+  setScene(scene?: Scene) {
     if (this.currentScene === scene) {
       return;
-    }
-    if (this.controls) {
-      this.controls.disconnect();
-      this.controls.dispose();
     }
     if (this.currentScene) {
       this.currentScene.emit('leaved');
@@ -121,10 +130,6 @@ export class World extends EventEmitter<WorldEventMap> {
       this.currentScene.resize(staticSize.width, staticSize.height);
       this.currentScene.emit('entered');
       this.currentScene.setupRuntime(this.context);
-      const controls = new OrbitControls(this.currentScene.camera.native, this.dom);
-      controls.minDistance = 0;
-      controls.maxDistance = 4;
-      this.controls = controls;
     }
   }
   resize(width: number, height: number) {
@@ -137,6 +142,10 @@ export class World extends EventEmitter<WorldEventMap> {
 
     this.renderer.setSize(width, height);
     this.renderer.setViewport(0, 0, width, height);
+
+    this.camera.props.aspect = width / height;
+
+    this.panel.resize(width, height);
 
     if (this.currentScene) {
       this.currentScene.resize(width, height);
@@ -161,7 +170,7 @@ export class World extends EventEmitter<WorldEventMap> {
       this.currentScene.removeFromParent();
       this.currentScene.traverse(fntrv);
     }
-    [this.root].forEach((e) => e.traverse(fntrv));
+    [this.root, this.panel].forEach((e) => e.traverse(fntrv));
     this.dom.removeEventListener('pointerdown', this.onMouseDownBinder);
     this.dom.removeEventListener('pointerup', this.onMouseUpBinder);
   }
@@ -174,13 +183,20 @@ export class World extends EventEmitter<WorldEventMap> {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private render(delta: number, now: number) {
-    if (!this.currentScene) {
-      return;
+    this.renderer.clearDepth();
+    const camera = this.camera.native;
+    if (this.currentScene) {
+      const scene = this.currentScene.native;
+      this.currentScene.update(delta, now, this.renderer, scene, camera);
+      this.renderer.autoClear = true;
+      this.renderer.render(this.root, camera);
+      this.renderer.autoClear = false;
+    } else {
+      this.renderer.autoClear = true;
     }
-    // this.renderer.clearDepth();
-    const camera = this.currentScene.camera.native;
-    this.currentScene.update(delta, now, this.renderer, this.currentScene.native, camera);
-    this.renderer.render(this.root, camera);
+    const panel = this.panel.native;
+    this.panel.update(delta, now, this.renderer, panel, this.panel.camera);
+    this.renderer.render(panel, this.panel.camera);
   }
 
   async run(): Promise<void> {
@@ -229,7 +245,7 @@ export class World extends EventEmitter<WorldEventMap> {
     }
     const { left, top, width, height } = this.dom.getBoundingClientRect();
     const pointer = new Vector2((e.clientX - left) / width * 2 - 1, - (e.clientY - top) / height * 2 + 1);
-    this.raycaster.setFromCamera(pointer, this.currentScene.camera.native);
+    this.raycaster.setFromCamera(pointer, this.camera.native);
     const intersections: Intersection<Object3D>[] = [];
     this.raycaster.intersectObjects([this.currentScene.native], true, intersections);
     for (const it of intersections) {

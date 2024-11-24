@@ -1,4 +1,4 @@
-import type { Mesh as Mesh3d } from "three/webgpu";
+import type { Mesh as Mesh3D } from "three/webgpu";
 import { Element, type AttrsLike, type ElementEventMap, type PropsLike } from "./element";
 import cache from "./cache";
 import { colorWith } from "../utils";
@@ -13,7 +13,7 @@ export type MeshAttrs = AttrsLike & {
   color: number;
 }
 
-export class Mesh<T extends Mesh3d = Mesh3d, P extends MeshProps = MeshProps, A extends MeshAttrs = MeshAttrs, E extends ElementEventMap = ElementEventMap> extends Element<T, P, A, E> {
+export class Mesh<T extends Mesh3D = Mesh3D, P extends MeshProps = MeshProps, A extends MeshAttrs = MeshAttrs, E extends ElementEventMap = ElementEventMap> extends Element<T, P, A, E> {
   get material(): T['material'] {
     return this.native.material;
   }
@@ -46,6 +46,18 @@ export class Mesh<T extends Mesh3d = Mesh3d, P extends MeshProps = MeshProps, A 
       } else {
         m.color = color;
       }
+    }
+  }
+
+  dispose() {
+    super.dispose();
+    if (Array.isArray(this.material)) {
+      this.material.forEach((e) => e.dispose());
+    } else if (this.material) {
+      this.material.dispose();
+    }
+    if (this.geometry) {
+      this.geometry.dispose();
     }
   }
 }

@@ -1,5 +1,5 @@
 import * as THREE from 'three/webgpu';
-import { BufferGeometry, Color, Group, LineBasicNodeMaterial, LineSegments, Mesh, MeshBasicNodeMaterial, ShapeGeometry, ShapePath } from 'three/webgpu';
+import { BufferGeometry, Color, Group, LineBasicNodeMaterial, LineSegments, Mesh as Mesh3D, MeshBasicNodeMaterial, ShapeGeometry, ShapePath } from 'three/webgpu';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { LineGeometry } from 'three/examples/jsm/Addons.js';
 import debounce from 'debounce';
@@ -288,7 +288,7 @@ export class Text extends Rect<Props> {
   private _sync: any;
   private _needSync = true;
 
-  protected textMesh: Mesh<BufferGeometry, MeshBasicNodeMaterial>;
+  protected textMesh: Mesh3D<BufferGeometry, MeshBasicNodeMaterial>;
   protected outline: LineSegments<BufferGeometry, LineBasicNodeMaterial>;
   protected root = new Group();
 
@@ -299,7 +299,7 @@ export class Text extends Rect<Props> {
 
     this.native.add(this.root);
 
-    this.textMesh = new Mesh(
+    this.textMesh = new Mesh3D(
       new BufferGeometry(),
       new MeshBasicNodeMaterial({
         opacity: this.props.opacity,
@@ -493,7 +493,7 @@ export class Text extends Rect<Props> {
     fill.applyMatrix4(m);
     outline.applyMatrix4(m);
 
-    const fillNew = new Mesh(fill, this.textMesh.material);
+    const fillNew = new Mesh3D(fill, this.textMesh.material);
     fillNew.matrix.copy(this.textMesh.matrix);
     fillNew.matrix.decompose(fillNew.position, fillNew.quaternion, fillNew.scale);
     const outlineNew = new LineSegments(outline, this.outline.material);
@@ -575,5 +575,22 @@ export class Text extends Rect<Props> {
     glyph.geometrys = { fill, outline };
 
     return glyph;
+  }
+
+  dispose() {
+    super.dispose();
+
+    this.root.traverse(function (o: Mesh3D) {
+      if (o.isMesh) {
+        if (Array.isArray(o.material)) {
+          o.material.forEach((e) => e.dispose());
+        } else if (o.material) {
+          o.material.dispose();
+        }
+        if (o.geometry) {
+          o.geometry.dispose();
+        }
+      }
+    } as any);
   }
 }

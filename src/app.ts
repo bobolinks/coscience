@@ -9,7 +9,7 @@ import './hnet';
 export default {
   async beforeLaunch(store: Pinia) {
     dsp.init();
-    init();
+    await init();
     await cache.loadFont('/assets/fonts/STFangsong.ttf');
   },
   async onLaunched(store: Pinia) { }

@@ -49,6 +49,7 @@ export class PerspectiveCamera extends Camera<PerspectiveCamera3D, PerspectiveCa
   }
   set aspect(value: number) {
     this.native.aspect = value;
+    this.native.updateProjectionMatrix();
   }
   set far(value: number) {
     this.native.far = value;

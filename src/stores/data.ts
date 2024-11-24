@@ -1,8 +1,8 @@
 import { ref, watch } from 'vue';
-import { defineStore } from 'pinia';
+import { createPinia, defineStore } from 'pinia';
 
 export const appName = 'coscience';
-
+export const pinia = createPinia();
 export const useDataStore = defineStore('data', () => {
   const isDirty = ref<boolean>();
   const slideTouch = ref<number>(Number.parseInt(localStorage.getItem('slideTouch') || '0'));
@@ -24,3 +24,4 @@ export const useDataStore = defineStore('data', () => {
 
   return { isDirty, currentSlideIndex, slideTouch };
 });
+export const store = useDataStore(pinia);

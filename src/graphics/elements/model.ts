@@ -31,4 +31,21 @@ export class Model<O extends Mesh | Group = Group, P extends ModelProps = ModelP
     const maxScale = this.props.size / Math.max(scale.x, scale.y, scale.z);
     this.scaleGroup.scale.set(maxScale, maxScale, maxScale);
   }
+
+  dispose() {
+    super.dispose();
+
+    this.model.traverse(function (o: Mesh) {
+      if (o.isMesh) {
+        if (Array.isArray(o.material)) {
+          o.material.forEach((e) => e.dispose());
+        } else if (o.material) {
+          o.material.dispose();
+        }
+        if (o.geometry) {
+          o.geometry.dispose();
+        }
+      }
+    } as any);
+  }
 }

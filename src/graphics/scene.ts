@@ -1,6 +1,5 @@
 import { Camera as Camera3D, Mesh, Scene as Scene3D, type Renderer } from 'three/webgpu';
 import { Element, type AttrsLike, type ElementEventMap, type PropsLike } from './elements/element';
-import { type Camera, OrthographicCamera, PerspectiveCamera } from './elements/camera';
 import type { RunContext } from './runtime';
 
 export type SceneEventMap = ElementEventMap & {
@@ -8,11 +7,11 @@ export type SceneEventMap = ElementEventMap & {
   leaved: void;
 };
 
-export class Scene<C extends Camera, P extends PropsLike = PropsLike, A extends AttrsLike = AttrsLike, E extends SceneEventMap = SceneEventMap> extends Element<Scene3D, P, A, E> {
+export class Scene<P extends PropsLike = PropsLike, A extends AttrsLike = AttrsLike, E extends SceneEventMap = SceneEventMap> extends Element<Scene3D, P, A, E> {
   public readonly size = { width: 0, height: 0 };
   public readonly runtime: RunContext = {} as any;
 
-  constructor(public readonly camera: C, props: P) {
+  constructor(props: P) {
     super(new Scene3D(), props);
   }
 
@@ -23,19 +22,6 @@ export class Scene<C extends Camera, P extends PropsLike = PropsLike, A extends 
   resize(width: number, height: number) {
     this.size.width = width;
     this.size.height = height;
-
-    if (this.camera instanceof PerspectiveCamera) {
-      this.camera.props.aspect = width / height;
-      this.camera.native.updateProjectionMatrix();
-    } else if (this.camera instanceof OrthographicCamera) {
-      const wh = width / 2;
-      const hh = height / 2;
-      this.camera.props.left = -wh;
-      this.camera.props.right = wh;
-      this.camera.props.top = hh;
-      this.camera.props.bottom = -hh;
-      this.camera.native.updateProjectionMatrix();
-    }
   }
 
   update(delta: number, now: number, renderer: Renderer, scene: Scene3D, camera: Camera3D) {
@@ -46,22 +32,5 @@ export class Scene<C extends Camera, P extends PropsLike = PropsLike, A extends 
       it.children.forEach(fn);
     };
     this.children.forEach(fn);
-  }
-
-  dispose() {
-    this.clearAnimations();
-    const fntrv = (el: any) => {
-      if (el instanceof Mesh) {
-        if (Array.isArray(el.material)) {
-          el.material.forEach((e) => e.dispose());
-        } else if (el.material) {
-          el.material.dispose();
-        }
-        if (el.geometry) {
-          el.geometry.dispose();
-        }
-      }
-    };
-    this.traverse(fntrv);
   }
 }
