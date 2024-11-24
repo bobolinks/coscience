@@ -22,10 +22,10 @@ import { Mesh, type MeshAttrs, type MeshProps } from './mesh';
 
 type Props = MeshProps & {
   lineWidth: number;
-  target: Vector3 | Object3D;
+  to: Vector3 | Object3D;
 };
 
-type Attrs = MeshAttrs & { target: Vec3Like };
+type Attrs = MeshAttrs & { to: Vec3Like };
 
 export class Arrow extends Mesh<Line2, Props, Attrs> {
   public readonly isArrow = true;
@@ -33,14 +33,14 @@ export class Arrow extends Mesh<Line2, Props, Attrs> {
   protected arrow: THREE.Mesh<CylinderGeometry, MeshBasicNodeMaterial>;
 
   private _reshape: any;
-  private _target: Vector3 = new Vector3();
+  private _to: Vector3 = new Vector3();
 
   constructor(props?: Partial<Props>) {
     super(new Line2(), {
       color: colorWith('#fff'),
       lineWidth: 0.002,
       opacity: 1,
-      target: new Vector3(),
+      to: new Vector3(),
       ...props
     });
 
@@ -90,12 +90,12 @@ export class Arrow extends Mesh<Line2, Props, Attrs> {
       arrow.dispose();
     }
   }
-  protected get target() {
-    return this._target;
+  protected get to() {
+    return this._to;
   }
-  protected set target(value: Vector3 | Object3D) {
+  protected set to(value: Vector3 | Object3D) {
     if (value instanceof Vector3) {
-      this._target = value;
+      this._to = value;
       this._reshape();
     }
   }
@@ -104,22 +104,22 @@ export class Arrow extends Mesh<Line2, Props, Attrs> {
     if (p) {
       this.position.set(p.x, p.y, p.z);
     }
-    this.props.target = this.position.clone();
+    this.props.to = this.position.clone();
   }
 
   protected applyAnimationExtra(attrs: Attrs) {
     if (attrs.target) {
       let changed = false;
       if (attrs.target.x !== undefined) {
-        this._target.x = attrs.target.x;
+        this._to.x = attrs.target.x;
         changed = true;
       }
       if (attrs.target.y !== undefined) {
-        this._target.y = attrs.target.y;
+        this._to.y = attrs.target.y;
         changed = true;
       }
       if (attrs.target.z !== undefined) {
-        this._target.z = attrs.target.z;
+        this._to.z = attrs.target.z;
         changed = true;
       }
       if (changed) this.reshape();
@@ -132,7 +132,7 @@ export class Arrow extends Mesh<Line2, Props, Attrs> {
     }
 
     const p = this.position;
-    const p1 = this._target.clone().sub(p);
+    const p1 = this._to.clone().sub(p);
 
     // setPositions
     const instanceStart: InterleavedBufferAttribute = this.geometry.attributes.instanceStart as any;
@@ -146,7 +146,7 @@ export class Arrow extends Mesh<Line2, Props, Attrs> {
     const instanceDistanceStart: InterleavedBufferAttribute = this.geometry.attributes.instanceDistanceStart as any;
     const instanceDistanceEnd: InterleavedBufferAttribute = this.geometry.attributes.instanceDistanceEnd as any;
     const instanceDistanceBuffer: InstancedInterleavedBuffer = instanceDistanceStart.data as any;
-    instanceDistanceBuffer.set([p.distanceTo(this._target)], 1);
+    instanceDistanceBuffer.set([p.distanceTo(this._to)], 1);
     instanceDistanceStart.needsUpdate = true;
     instanceDistanceEnd.needsUpdate = true;
 
@@ -168,9 +168,9 @@ export class Arrow extends Mesh<Line2, Props, Attrs> {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   update(delta: number, now: number, renderer: Renderer, scene: Scene, camera: Camera): void {
-    if (this.props.target instanceof Object3D) {
-      if (!this._target.equals(this.props.target.position)) {
-        this._target.copy(this.props.target.position);
+    if (this.props.to instanceof Object3D) {
+      if (!this._to.equals(this.props.to.position)) {
+        this._to.copy(this.props.to.position);
         this._reshape();
       }
     }

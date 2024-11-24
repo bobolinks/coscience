@@ -13,13 +13,11 @@ export class Rect<T extends RectProps = RectProps> extends Shape2D<Mesh<ShapeGeo
 
   constructor(props?: Partial<T>) {
     super(
-      new MeshBasicNodeMaterial(),
+      new MeshBasicNodeMaterial({ opacity: props?.opacity ?? 1 }),
       {
         width: 1,
         height: 1,
-        borderColor: colorWith('#000'),
         borderRadius: 0,
-        borderWidth: 0.01,
         color: colorWith('#fff'),
         opacity: 1,
         ...props

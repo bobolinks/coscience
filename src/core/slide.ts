@@ -3,14 +3,13 @@ import type { RunContext } from "@/graphics/runtime";
 import { Scene, type SceneEventMap } from "@/graphics/scene";
 import { addLib, clearLib } from '@/tslib';
 import { store } from '../stores/data';
-import { number } from "@/utils/is";
 
 type EventMap = SceneEventMap & {
   play: void;
   completed: void;
 };
 
-export class Slide<P extends PropsLike = PropsLike, A extends AttrsLike = AttrsLike> extends Scene<P, A, EventMap> {
+export class Slide<R extends RunContext = RunContext, P extends PropsLike = PropsLike, A extends AttrsLike = AttrsLike> extends Scene<R, P, A, EventMap> {
   protected isPlaying = false;
 
   constructor(public readonly sid: number, props: P) {

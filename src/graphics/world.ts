@@ -11,6 +11,7 @@ import { PerspectiveCamera, } from './elements/camera';
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
 import type { RunContext } from './runtime';
 import { Panel } from './panel';
+import sys from '@/utils/sys';
 
 export type WorldEvent = 'worldStarted' | 'worldEnded';
 export type WorldEventMap = {
@@ -80,7 +81,6 @@ export class World extends EventEmitter<WorldEventMap> {
     this.renderer.logarithmicDepthBuffer = true;
     this.renderer.setClearColor(colorWith(0));
     this.renderer.setPixelRatio(window.devicePixelRatio);
-    this.renderer.setSize(staticSize.width, staticSize.height);
 
     this.root = new Scene3D();
 
@@ -100,6 +100,8 @@ export class World extends EventEmitter<WorldEventMap> {
     this.context = {
       tsl,
       camera: this.camera,
+      subtitle: this.panel.subtitle,
+      wait: sys.wait,
       say: (content: string) => {
         this.props.subtitle = content;
         return this.speaker.say(content);
@@ -114,6 +116,8 @@ export class World extends EventEmitter<WorldEventMap> {
     };
     dom.addEventListener('pointerdown', this.onMouseDownBinder);
     dom.addEventListener('pointerup', this.onMouseUpBinder);
+
+    this.resize(staticSize.width, staticSize.height);
   }
   setScene(scene?: Scene) {
     if (this.currentScene === scene) {

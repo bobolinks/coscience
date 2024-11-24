@@ -5,9 +5,20 @@ declare type AttrsLike = {
   rotation: Vec3Like;
 };
 
+declare type MeshAttrs = {
+  opacity: number;
+  color: number;
+}
+
+declare type LightAttrs = {
+  intensity: number;
+}
+
 declare class ElementNode<A extends AttrsLike> {
   startAnimation(attrs: Partial<A>, time: number): Promise<void>;
 }
 
 declare const camera: ElementNode<AttrsLike>;
+declare const subtitle: ElementNode<AttrsLike & MeshAttrs>;
+declare function wait(...args: Array<number | Promise<void>>): void;
 declare function say(content: string): void;

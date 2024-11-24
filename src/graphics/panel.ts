@@ -1,13 +1,13 @@
 import { Camera as Camera3D, OrthographicCamera, Scene as Scene3D, type Renderer } from 'three/webgpu';
 import { Element } from './elements/element';
 import { Ruler } from './elements/ruler';
-import { Text } from './elements/text';
 import type { PerspectiveCamera } from './elements/camera';
+import { SubTitle } from './elements/subtitle';
 
 export class Panel extends Element<Scene3D> {
   public readonly camera: OrthographicCamera;
 
-  public readonly text: Text;
+  public readonly subtitle: SubTitle;
   public readonly ruler: Ruler;
 
   constructor(
@@ -21,7 +21,7 @@ export class Panel extends Element<Scene3D> {
     this.camera.name = 'Orthographic';
     this.camera.position.set(0, 0, 100);
 
-    const text = new Text({
+    const subtitle = new SubTitle({
       width: 60,
       height: 20,
       borderRadius: 2,
@@ -29,12 +29,11 @@ export class Panel extends Element<Scene3D> {
       color: 0xffffff,
       background: 'none',
       opacity: 0.3,
-      fontSize: 2,
+      fontSize: 4,
       textAlign: 'center'
     });
-    this.text = text;
-    this.text.position.set(10, 10, 0);
-    this.add(text);
+    this.subtitle = subtitle;
+    this.add(subtitle);
 
     this.ruler = new Ruler(perspCamera.native);
     this.add(this.ruler);
@@ -56,9 +55,10 @@ export class Panel extends Element<Scene3D> {
     }
     this.camera.updateProjectionMatrix();
 
-    this.text.position.set(0, this.camera.top - 4, 0);
-
-    this.ruler.resize(this.camera.right * 2, this.camera.top * 2);
+    const w = this.camera.right * 2;
+    const h = this.camera.top * 2;
+    this.subtitle.resize(w, h);
+    this.ruler.resize(w, h);
   }
   update(delta: number, now: number, renderer: Renderer, scene: Scene3D, camera: Camera3D) {
     const fn = (it: any) => {

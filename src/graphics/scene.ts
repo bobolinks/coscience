@@ -7,9 +7,9 @@ export type SceneEventMap = ElementEventMap & {
   leaved: void;
 };
 
-export class Scene<P extends PropsLike = PropsLike, A extends AttrsLike = AttrsLike, E extends SceneEventMap = SceneEventMap> extends Element<Scene3D, P, A, E> {
+export class Scene<R extends RunContext = RunContext, P extends PropsLike = PropsLike, A extends AttrsLike = AttrsLike, E extends SceneEventMap = SceneEventMap> extends Element<Scene3D, P, A, E> {
   public readonly size = { width: 0, height: 0 };
-  public readonly runtime: RunContext = {} as any;
+  public readonly runtime: R = {} as any;
 
   constructor(props: P) {
     super(new Scene3D(), props);

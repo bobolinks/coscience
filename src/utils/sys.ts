@@ -2,11 +2,26 @@ const n = navigator as any;
 export const isModile = navigator.userAgent.match(/(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i);
 export const isTouchDevice = 'ontouchstart' in window || n.maxTouchPoints;
 
+type Milliseconds = number;
+
+function msToPromise(ms: number | Promise<void>) {
+  if (typeof ms !== 'number') {
+    return ms;
+  }
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms, true);
+  });
+}
+
 export default {
-  wait(ms: number) {
-    return new Promise((resolve) => {
-      setTimeout(resolve, ms, true);
-    });
+  // number : ms
+  wait(...args: Array<Milliseconds | Promise<void>>) {
+    if (args.length === 0) {
+      return;
+    } else if (args.length === 1) {
+      return msToPromise(args[0]);
+    }
+    return Promise.all(args.map(msToPromise));
   },
 
   async count(count: number, cb: (c: number) => void, ms: number = 1000, delay?: boolean) {

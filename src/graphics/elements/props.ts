@@ -6,6 +6,17 @@ interface Observor {
   onPropSet(k: string, value: any): void;
 }
 
+export function getPropertyDescriptor(obj: any, k: string): PropertyDescriptor | undefined {
+  let d: PropertyDescriptor | undefined;
+  do {
+    d = Object.getOwnPropertyDescriptor(obj, k);
+    if (!d) {
+      obj = obj.__proto__;
+    }
+  } while (obj && !d);
+  return d;
+}
+
 export function propsProxy(props: any, observor: Observor) {
   return new Proxy(props, {
     get(target, p, receiver) {
@@ -52,7 +63,7 @@ export function propsProxy(props: any, observor: Observor) {
         rv = Reflect.set(target, p, newValue, target);
       }
       if (rv) {
-        const { set } = Object.getOwnPropertyDescriptor((observor as any).__proto__, p) || {};
+        const { set } = getPropertyDescriptor(observor, p) || {};
         if (set) {
           set.call(observor, newValue);
         }

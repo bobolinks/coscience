@@ -1,8 +1,8 @@
 
 import { Tween, Group, Easing } from '@tweenjs/tween.js';
 import { EventEmitter } from '@/utils/events';
-import type { Camera, Object3D, Renderer, Scene, Vector2 } from 'three/webgpu';
-import { propsProxy } from './props';
+import { Vector3, type Camera, type Object3D, type Renderer, type Scene, type Vector2 } from 'three/webgpu';
+import { getPropertyDescriptor, propsProxy } from './props';
 
 export const defaultAnimationGroup: Group = new Group();
 
@@ -15,6 +15,7 @@ export type AttrsLike = {
   position: Vec3Like;
   scale: Vec3Like;
   rotation: Vec3Like;
+  target: Vec3Like; // look at
 };
 
 type AnimationTask<T> = {
@@ -37,6 +38,8 @@ export class Element<T extends Object3D = Object3D, P extends PropsLike = PropsL
   public readonly props: P;
   public readonly children: Element[] = [];
   public readonly parent: Element | undefined;
+
+  protected target?: Vector3;
 
   private aniCur: AnimationTask<A> | undefined;
   private aniQue: Array<AnimationTask<A>> = [];
@@ -114,6 +117,18 @@ export class Element<T extends Object3D = Object3D, P extends PropsLike = PropsL
     // do nothings
   }
 
+  lookAt(x: Vector3 | number | null, y?: number, z?: number): void {
+    if (typeof x === 'number') {
+      this.native.lookAt(x as any, y as any, z as any);
+      this.target = new Vector3(x, y, z);
+    } else if (x) {
+      this.native.lookAt(x as any, y as any, z as any);
+      this.target = x.clone();
+    } else {
+      this.target = undefined;
+    }
+  }
+
   startAnimation(attrs: Partial<A>, time: number): Promise<void> {
     if (!this.native.visible) {
       this.native.visible = true;
@@ -165,13 +180,13 @@ export class Element<T extends Object3D = Object3D, P extends PropsLike = PropsL
         .to(end, time)
         .easing(Easing.Quadratic.InOut)
         .onUpdate(() => {
-          assignAttrs(this, current);
+          this.assignAttrs(this, current);
           this.applyAnimation(current);
         })
         .onComplete(() => {
           defaultAnimationGroup.remove(ani);
           this.aniCur = undefined;
-          assignAttrs(this, end);
+          this.assignAttrs(this, end);
           this.applyAnimation(end);
           resolve(0);
           return setTimeout(() => {
@@ -186,12 +201,47 @@ export class Element<T extends Object3D = Object3D, P extends PropsLike = PropsL
     } catch (err) {
       defaultAnimationGroup.remove(ani);
       this.aniCur = undefined;
-      assignAttrs(this, end);
+      this.assignAttrs(this, end);
       this.applyAnimation(current);
       reject(err);
       return setTimeout(() => {
         this.execAni();
       }, 0);
+    }
+  }
+
+  private assignAttrs<T extends AttrsLike>(obj: any, attrs: T) {
+    const trv = (oo: any, ao: any) => {
+      for (const [k, av] of Object.entries(ao)) {
+        if (typeof av === 'object') {
+          const ov = oo[k];
+          if (typeof ov !== 'object') {
+            continue;
+          }
+          trv(ov, av);
+        } else if (typeof av === 'number') {
+          const ov = oo[k];
+          if (typeof ov === 'object' && ov.isUniformNode) {
+            ov.value = av;
+            continue;
+          }
+          if (typeof ov !== 'number') {
+            const { set } = getPropertyDescriptor(oo, k) || {};
+            if (set) {
+              set.call(oo, av);
+            }
+            continue;
+          }
+          oo[k] = av;
+        }
+      }
+    };
+    trv(obj, attrs);
+
+    if (attrs.target) {
+      this.lookAt(attrs.target.x, attrs.target.y, attrs.target.z);
+    } else if (this.target && attrs.position) {
+      this.lookAt(this.target);
     }
   }
 }
@@ -224,31 +274,3 @@ function pickAttrs<T extends AttrsLike>(obj: any, ref: T): T {
   return attrs;
 }
 
-function assignAttrs<T extends AttrsLike>(obj: any, attrs: T) {
-  const trv = (oo: any, ao: any) => {
-    for (const [k, av] of Object.entries(ao)) {
-      if (typeof av === 'object') {
-        const ov = oo[k];
-        if (typeof ov !== 'object') {
-          continue;
-        }
-        trv(ov, av);
-      } else if (typeof av === 'number') {
-        const ov = oo[k];
-        if (typeof ov === 'object' && ov.isUniformNode) {
-          ov.value = av;
-          continue;
-        }
-        if (typeof ov !== 'number') {
-          const { set } = Object.getOwnPropertyDescriptor(oo.__proto__, k) || {};
-          if (set) {
-            set.call(oo, av);
-          }
-          continue;
-        }
-        oo[k] = av;
-      }
-    }
-  };
-  trv(obj, attrs);
-}

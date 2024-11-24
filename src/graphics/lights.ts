@@ -50,7 +50,8 @@ export class LightMesh<L extends SpotLight | PointLight = SpotLight> extends Ele
     super(new Mesh(new SphereGeometry(props.size, 16, 8), new NodeMaterial()), props);
     const clr = new Color(this.props.color);
     this.material.colorNode = color(clr.getHex());
-    this.material.lights = false;
+    this.material.lightsNode = lights([]); // ignore scene lights
+    // this.material.lights = false;
     this.light.intensity = this.props.intensity;
     this.native.add(light);
   }
@@ -89,8 +90,8 @@ export class Lights extends Element<Group, PropsLike, Attrs> {
     this.node = allLightsNode;
     this.context = context;
 
-    lightsAll.forEach((e) => {
-      this.native.add(e);
+    Object.values(all).forEach((e) => {
+      this.add(e);
     });
   }
   set intensity(value: number) {

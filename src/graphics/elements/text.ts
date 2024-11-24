@@ -2,7 +2,6 @@ import * as THREE from 'three/webgpu';
 import { BufferGeometry, Color, Group, LineBasicNodeMaterial, LineSegments, Mesh as Mesh3D, MeshBasicNodeMaterial, ShapeGeometry, ShapePath } from 'three/webgpu';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { LineGeometry } from 'three/examples/jsm/Addons.js';
-import debounce from 'debounce';
 import { Rect, type RectProps } from './rect';
 import type { FontLib, Glyph } from './cache';
 import cache from './cache';
@@ -285,7 +284,6 @@ type Props = TextProps & RectProps & {
 };
 
 export class Text extends Rect<Props> {
-  private _sync: any;
   private _needSync = true;
 
   protected textMesh: Mesh3D<BufferGeometry, MeshBasicNodeMaterial>;
@@ -320,17 +318,13 @@ export class Text extends Rect<Props> {
     this.outline.renderOrder = this.fill.renderOrder + 2;
     this.root.add(this.outline);
 
-    this._sync = debounce(() => {
-      this.sync();
-    });
-
-    this._sync();
-
+    this._needSync = true;
+    this.sync();
     this.reset();
   }
   protected set text(value: string) {
     this._needSync = true;
-    if (this._sync) this._sync();
+    this.delaySync();
   }
   protected set fontSize(value: number) {
     if (this.root) {
@@ -339,15 +333,15 @@ export class Text extends Rect<Props> {
   }
   protected set lineHeight(value: number) {
     this._needSync = true;
-    if (this._sync) this._sync();
+    this.delaySync();
   }
   protected set maxWidth(value: number) {
     this._needSync = true;
-    if (this._sync) this._sync();
+    this.delaySync();
   }
   protected set overflowWrap(value: number) {
     this._needSync = true;
-    if (this._sync) this._sync();
+    this.delaySync();
   }
   protected set color(value: Color) {
     if (this.textMesh) materialSet(this.textMesh.material, e => e.color = value);
@@ -361,7 +355,14 @@ export class Text extends Rect<Props> {
   protected set outlineColor(value: Color) {
     if (this.outline) materialSet(this.outline.material, e => e.color = value);
   }
+  protected get opacity() {
+    return this.props.opacity || 0;
+  }
   protected set opacity(value: number) {
+    if (this.opacity !== value) {
+      this.props.opacity = value;
+      return;
+    }
     materialSet(this.fill.material, e => e.opacity = value);
     if (this.textMesh) {
       materialSet(this.textMesh.material, e => e.opacity = value);
@@ -419,6 +420,11 @@ export class Text extends Rect<Props> {
     this.outlineOpacity = this.props.outlineOpacity;
     this.textAlign = this.props.textAlign;
     this.background = this.props.background;
+  }
+  private delaySync() {
+    setTimeout(() => {
+      this.sync();
+    });
   }
   sync() {
     if (!this._needSync) {
@@ -500,7 +506,9 @@ export class Text extends Rect<Props> {
     outlineNew.matrix.copy(this.outline.matrix);
     outlineNew.matrix.decompose(fillNew.position, fillNew.quaternion, fillNew.scale);
 
+    this.textMesh.visible = false;
     this.textMesh.geometry.dispose();
+    this.outline.visible = false;
     this.outline.geometry.dispose();
 
     this.textMesh.removeFromParent();
