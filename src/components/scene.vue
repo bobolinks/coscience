@@ -113,7 +113,7 @@ onMounted(() => {
   if (!dsp.world) {
     dsp.world = new World(canvas.value!, worldProps.value);
     const cls = slides[store.currentSlideIndex];
-    dsp.world.setScene(new cls());
+    dsp.world.setScene(new cls(store.currentSlideIndex, cls.title));
     dsp.world.run();
   }
 });

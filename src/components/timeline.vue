@@ -1,7 +1,7 @@
 <template>
   <el-timeline class="timeline" style="max-width: 600px">
     <el-timeline-item class="guiding" center :icon="Guide" color="#fff"></el-timeline-item>
-    <el-timeline-item v-for="(it, index) in activities" :key="index" center :icon="it.icon" :type="it.type" size="large" placement="top">
+    <el-timeline-item v-for="(it, index) in activities" :key="index" center :icon="icons[it.type]" :type="it.type" size="large" placement="top">
       <label class="title" :selected="index === store.currentSlideIndex">{{ it.title }}</label>
       <el-image class="thumb" :src="`/assets/images/slide-${index}.png`" @click="select(index)">
         <template #error>
@@ -14,47 +14,66 @@
   </el-timeline>
 </template>
 <script lang="ts" setup>
+import { ref, watch, onMounted } from 'vue';
 import { ElTimeline, ElTimelineItem, ElImage, ElIcon } from 'element-plus';
 import { QuestionFilled, SuccessFilled, Camera } from '@element-plus/icons-vue';
 import Guide from './icon/guide.vue';
-import { useDataStore } from '../stores/data';
+import { store } from '../stores/data';
 import slides from '../core/slides';
 import { dsp } from '../dsp';
 
-const store = useDataStore();
+type Item = {
+  title: string;
+  type: (typeof ElTimelineItem)['type'];
+};
 
-const activities: Array<any> = [
-  {
-    title: '电脑无处不在',
-    type: 'success',
-    icon: SuccessFilled,
-  },
-  {
-    title: '灯泡和开关',
-    type: 'primary',
-  },
-  {
-    title: '显示器',
-    type: 'info',
-    icon: QuestionFilled,
-  },
-  {
-    title: '代码',
-    type: 'info',
-    icon: QuestionFilled,
-  },
-  {
-    title: '编程',
-    type: 'info',
-    icon: QuestionFilled,
-  },
-];
+const icons: any = { success: SuccessFilled, info: QuestionFilled };
+const activities = ref<Array<Item>>([]);
+
 function select(index: number) {
-  if (store.currentSlideIndex === index || index <= slides.length) {
+  if (store.currentSlideIndex === index || index >= slides.length) {
     return;
   }
   store.currentSlideIndex = index;
 }
+watch(
+  () => store.passSlideIndex,
+  (value: number) => {
+    const max = slides.length - 1;
+    if (value >= max) {
+      return;
+    }
+    store.currentSlideIndex = value + 1;
+    updateSlides();
+  },
+);
+watch(
+  () => store.currentSlideIndex,
+  (value: number) => {
+    if (!dsp.world) {
+      return;
+    }
+
+    const cls = slides[store.currentSlideIndex];
+    dsp.world.setScene(new cls(store.currentSlideIndex, cls.title));
+  },
+);
+
+function updateSlides() {
+  const pass = store.passSlideIndex;
+  const ls = slides.map((e, i) => {
+    const type = i <= pass ? 'success' : i === pass + 1 ? 'primary' : 'info';
+    return {
+      title: e.title,
+      type,
+    };
+  });
+  activities.value = ls;
+}
+
+onMounted(() => {
+  updateSlides();
+});
 </script>
 <style scoped>
 .timeline {

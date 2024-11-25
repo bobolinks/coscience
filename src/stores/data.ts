@@ -5,7 +5,7 @@ export const appName = 'coscience';
 export const pinia = createPinia();
 export const useDataStore = defineStore('data', () => {
   const isDirty = ref<boolean>();
-  const slideTouch = ref<number>(Number.parseInt(localStorage.getItem('slideTouch') || '0'));
+  const passSlideIndex = ref<number>(Number.parseInt(localStorage.getItem('passSlideIndex') || '-1'));
   const currentSlideIndex = ref<number>(0);
   const isAdmin = ref<boolean>(false);
 
@@ -18,10 +18,10 @@ export const useDataStore = defineStore('data', () => {
     }
   }
 
-  watch(slideTouch, () => {
-    localStorage.setItem('slideTouch', `${slideTouch.value}`);
+  watch(passSlideIndex, () => {
+    localStorage.setItem('passSlideIndex', `${passSlideIndex.value}`);
   });
 
-  return { isDirty, currentSlideIndex, slideTouch };
+  return { isDirty, currentSlideIndex, passSlideIndex };
 });
 export const store = useDataStore(pinia);

@@ -1,6 +1,10 @@
 import * as THREE from 'three/webgpu';
 import { Color, Group, Mesh, MeshBasicMaterial, Shape, ShapeGeometry } from 'three/webgpu';
-import { LineGeometry, SVGLoader } from 'three/examples/jsm/Addons.js';
+import { LineGeometry, SVGLoader, type GLTF } from 'three/examples/jsm/Addons.js';
+import { DRACOLoader, GLTFLoader } from "three/examples/jsm/Addons.js";
+
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath('/draco/');
 
 type ExtractArrayElementType<T> = T extends Array<infer E> ? E : T;
 
@@ -169,4 +173,10 @@ export function numberScale(value: string | number, ref: number): number {
   } else {
     return Number.parseFloat(value) * ref;
   }
+}
+
+export function loadGltf(file: string): Promise<GLTF> {
+  const loader = new GLTFLoader();
+  loader.setDRACOLoader(dracoLoader);
+  return loader.loadAsync(file);
 }

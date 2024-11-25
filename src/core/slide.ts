@@ -12,7 +12,7 @@ type EventMap = SceneEventMap & {
 export class Slide<R extends RunContext = RunContext, P extends PropsLike = PropsLike, A extends AttrsLike = AttrsLike> extends Scene<R, P, A, EventMap> {
   protected isPlaying = false;
 
-  constructor(public readonly sid: number, props: P) {
+  constructor(public readonly sid: number, public readonly title: string, props: P) {
     super(props);
   }
 
@@ -26,6 +26,8 @@ export class Slide<R extends RunContext = RunContext, P extends PropsLike = Prop
 
   setupRuntime(context: RunContext): void {
     super.setupRuntime(context);
+    context.subtitle.alignTo('center');
+    context.subtitle.props.text = this.title;
     const dts = this.getDts();
     if (dts) {
       addLib(`slide-${this.sid}`, dts);
@@ -58,8 +60,8 @@ export class Slide<R extends RunContext = RunContext, P extends PropsLike = Prop
   complete() {
     this.isPlaying = false;
     this.emit('completed');
-    if (store.slideTouch < this.sid) {
-      store.slideTouch = this.sid;
+    if (store.passSlideIndex < this.sid) {
+      store.passSlideIndex = this.sid;
     }
   }
 }

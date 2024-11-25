@@ -68,4 +68,10 @@ export class Electric extends Model<Group, ElectricProps> {
     source.src = src;
     this.video.play();
   }
+  dispose(): void {
+    super.dispose();
+    if (typeof this.props.src === 'string') {
+      this.video.pause();
+    }
+  }
 }

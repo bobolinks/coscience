@@ -60,6 +60,12 @@ export class Element<T extends Object3D = Object3D, P extends PropsLike = PropsL
   get rotation() {
     return this.native.rotation;
   }
+  get visible() {
+    return this.native.visible;
+  }
+  set visible(value: boolean) {
+    this.native.visible = value;
+  }
 
   add(...element: Element[]) {
     element.forEach(e => {

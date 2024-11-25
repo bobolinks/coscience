@@ -1,14 +1,12 @@
 import { Slide } from "../slide";
-import { DRACOLoader, GLTFLoader } from "three/examples/jsm/Addons.js";
 import { AmbientLight, DirectionalLight, ExtrudeGeometry, FrontSide, Mesh as Mesh3D, MeshPhysicalNodeMaterial, PointLight, SpotLight, Vector2, type Group } from "three/webgpu";
 import { Electric } from "../electric";
 import { LightElement, LightMesh, Lights, type NamedLights } from '../../graphics/lights';
 import { Blue, Green, Red, White } from "../theme";
 import { ShapeCircle } from "@/graphics/elements/shapes";
 import type { RunContext } from "@/graphics/runtime";
-
-const dracoLoader = new DRACOLoader();
-dracoLoader.setDecoderPath('/draco/');
+import { Model } from "@/graphics/elements/model";
+import { loadGltf } from "@/graphics/utils";
 
 type Context = RunContext & {
   lights: Lights;
@@ -16,15 +14,17 @@ type Context = RunContext & {
   phone: Electric;
   tv: Electric;
   computer: Electric;
-  calculator: Electric;
+  calculator: Model;
 };
 
 export default class extends Slide<Context> {
+  static title = '计算机无处不在';
+
   private video: HTMLVideoElement;
   private lights: Lights;
 
-  constructor() {
-    super(0, { touchable: true });
+  constructor(index: number, title: string) {
+    super(index, title, { touchable: true });
 
     // lights
     const ambient = new LightElement(new AmbientLight(0x404040, 2), { intensity: 2 });
@@ -75,9 +75,7 @@ export default class extends Slide<Context> {
     this.load(video);
   }
   async load(video: HTMLVideoElement) {
-    const loader = new GLTFLoader();
-    loader.setDRACOLoader(dracoLoader);
-    const model = await loader.loadAsync('/assets/models/com.glb');
+    const model = await loadGltf('/assets/models/com.glb');
     const scene: Group = model.scene;
     const meshs: Mesh3D[] = scene.getObjectsByProperty('isMesh', true) as any;
     meshs.forEach((m: Mesh3D) => {
@@ -101,13 +99,14 @@ export default class extends Slide<Context> {
     const stage = new ShapeCircle(new Mesh3D(new ExtrudeGeometry(), new MeshPhysicalNodeMaterial({ metalness: 0.6, roughness: 0.3 })), { radius: 0.8, opts: { curveSegments: 80, depth: 0.01, bevelEnabled: false } });
     stage.native.castShadow = false;
     stage.native.receiveShadow = true;
+    stage.visible = false;
     this.add(stage);
     this.runtime.stage = stage;
 
     const zero = new Vector2();
     const vec = new Vector2(0.5, 0);
     const sz = [0.1, 0.4, 0.3];
-    const ecs = [phone, tv, computer, calculator].map((e, i) => {
+    const ecs: any = [phone, tv, computer, calculator].map((e, i) => {
       e.rotation.y = -Math.PI * i / 2;
       const cir = new ShapeCircle(new Mesh3D(new ExtrudeGeometry(), new MeshPhysicalNodeMaterial({
         color: 0xa0adaf,
@@ -119,7 +118,7 @@ export default class extends Slide<Context> {
       cir.position.x = vec.x;
       cir.position.y = 0.02;
       cir.position.z = vec.y;
-      const ec = new Electric(e, { src: video, size: sz[i] });
+      const ec = e !== calculator ? new Electric(e, { src: video, size: sz[i] }) : new Model<Group>(e, { size: sz[i] });
       cir.add(ec);
       stage.add(cir);
       vec.rotateAround(zero, Math.PI / 2);
@@ -141,26 +140,29 @@ export default class extends Slide<Context> {
     const { subtitle, lights, stage, wait } = this.runtime;
 
     stage.rotation.y = rot;
-    subtitle.props.opacity = 0;
-    subtitle.props.text = '电脑无处不在...';
-    await subtitle.startAnimation({ opacity: 1 }, 3000);
     await subtitle.startAnimation({ opacity: 0 }, 1000);
     subtitle.alignTo('bottom');
 
     this.video.play();
 
-    subtitle.props.text = '我们平时用的电脑的是这样的';
+    stage.visible = true;
+    subtitle.props.text = '我们平时用的计算机的是这样的，俗称电脑';
     await wait(
-      subtitle.startAnimation({ opacity: 1 }, 3000),
+      subtitle.startAnimation({ opacity: 1 }, 3000).then(() => {
+        subtitle.props.text = '动动鼠标和键盘，就可以让它帮我们完成很多工作内容';
+        return wait(1000);
+      }),
       lights.startAnimation({ intensity: 2 }, 3000),
     );
     await wait(4000);
 
     rot -= PI_2;
     await wait(
-      subtitle.startAnimation({ opacity: 0 }, 1000).then(() => {
-        subtitle.props.text = '但，我们每天看的数字电视，它其实也是一台电脑';
-        return subtitle.startAnimation({ opacity: 1 }, 3000);
+      subtitle.startAnimation({ opacity: 0 }, 1000).then(async () => {
+        subtitle.props.text = '我们每天看的数字电视，它其实也是一台计算机';
+        await subtitle.startAnimation({ opacity: 1 }, 3000);
+        subtitle.props.text = '按按遥控器，就可以观看你喜欢的电影，或者是电视节目';
+        return wait(1000);
       }),
       stage.startAnimation({ rotation: { x: 0, y: rot, z: 0 } }, 4000)
     );
@@ -168,9 +170,11 @@ export default class extends Slide<Context> {
 
     rot -= PI_2;
     await wait(
-      subtitle.startAnimation({ opacity: 0 }, 1000).then(() => {
-        subtitle.props.text = '甚至，我们每天用的手机，它其实也是一台电脑';
-        return subtitle.startAnimation({ opacity: 1 }, 3000);
+      subtitle.startAnimation({ opacity: 0 }, 1000).then(async () => {
+        subtitle.props.text = '我们每天用的手机，它其实也是一台计算机';
+        await subtitle.startAnimation({ opacity: 1 }, 3000);
+        subtitle.props.text = '动动手，就可以拨打电话、看新闻、听音乐';
+        return wait(1000);
       }),
       stage.startAnimation({ rotation: { x: 0, y: rot, z: 0 } }, 4000)
     );
@@ -178,16 +182,36 @@ export default class extends Slide<Context> {
 
     rot -= PI_2;
     await wait(
-      subtitle.startAnimation({ opacity: 0 }, 1000).then(() => {
-        subtitle.props.text = '更令我们想不到的是，我们经常用的计算器，它其实也是一台电脑';
-        return subtitle.startAnimation({ opacity: 1 }, 3000);
+      subtitle.startAnimation({ opacity: 0 }, 1000).then(async () => {
+        subtitle.props.text = '令我们想不到的是，我们经常用的计算器，它其实也是一台计算机';
+        await subtitle.startAnimation({ opacity: 1 }, 3000);
+        subtitle.props.text = '敲敲按键，它就可以帮助我们完成各种各样的快速运算';
+        return wait(1000);
       }),
       stage.startAnimation({ rotation: { x: 0, y: rot, z: 0 } }, 4000)
     );
+    await wait(2000);
+
+    stage.visible = false;
+    await wait(
+      subtitle.startAnimation({ opacity: 0 }, 1000).then(async () => {
+        subtitle.alignTo('center');
+        subtitle.props.text = '究竟是怎么做到的，为什么这么神奇？';
+        await subtitle.startAnimation({ opacity: 1 }, 3000);
+        subtitle.props.text = '现在，让我们一起探索其中的奥秘';
+        return wait(1000);
+      }),
+    );
     await wait(4000);
 
+    this.complete();
   }
   protected getDts(): string {
     return 'declare const lights: ElementNode<AttrsLike & LightAttrs>;';
+  }
+
+  dispose(): void {
+    super.dispose();
+    this.video.pause();
   }
 }
