@@ -7,17 +7,19 @@ type Props = {
 };
 
 export class Sound extends PositionalAudio {
+  static defaultListener: AudioListener;
+
   public readonly isSoundObject = true;
   public readonly props: Props;
 
-  constructor(props: Partial<Props>, listener: AudioListener) {
-    super(listener);
+  constructor(props: Partial<Props>, listener?: AudioListener) {
+    super(listener || Sound.defaultListener);
     this.props = { voice: 'zh-CN-XiaoshuangNeural', returnPlaying: false, ...props };
 
     this.setRefDistance(1000);
     this.setLoop(false);
   }
-  async playSound(url: string): Promise<void> {
+  async playSound(url: string, loop?: boolean): Promise<void> {
     if (this.isPlaying) {
       if (this.props.returnPlaying) {
         return;
@@ -30,7 +32,7 @@ export class Sound extends PositionalAudio {
       console.warn('not found!');
       return;
     }
-    this.setLoop(true);
+    this.setLoop(loop ?? false);
     this.setBuffer(buffer);
     return new Promise((resolve) => {
       this.onEnded = () => {

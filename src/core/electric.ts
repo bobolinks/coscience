@@ -22,7 +22,7 @@ export class Electric extends Model<Group, ElectricProps> {
       video.setAttribute('playsinline', '');
       video.setAttribute('crossOrigin', 'anonymous');
       video.style.display = 'none';
-      video.innerHTML = `<source src="/assets/textures/sintel.mp4">`;
+      video.innerHTML = `<source src="/assets/videos/sintel.mp4">`;
       video.play();
       this.video = video;
     } else {

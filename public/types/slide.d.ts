@@ -15,6 +15,7 @@ declare type LightAttrs = {
 }
 
 declare class ElementNode<A extends AttrsLike> {
+  emit(type: string, event: any): void;
   startAnimation(attrs: Partial<A>, time: number): Promise<void>;
 }
 

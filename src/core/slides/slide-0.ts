@@ -77,16 +77,6 @@ export default class extends Slide<Context> {
   async load(video: HTMLVideoElement) {
     const model = await loadGltf('/assets/models/com.glb');
     const scene: Group = model.scene;
-    const meshs: Mesh3D[] = scene.getObjectsByProperty('isMesh', true) as any;
-    meshs.forEach((m: Mesh3D) => {
-      if (Array.isArray(m.material)) {
-        m.material.forEach(e => (e.side = FrontSide, e.transparent = false));
-      } else {
-        m.material.side = FrontSide;
-        m.material.transparent = false;
-      }
-    });
-
     const phone: Group = scene.getObjectByProperty('name', 'Phone') as any;
     phone.position.set(0, 0, 0);
     const tv: Group = scene.getObjectByProperty('name', 'TV') as any;
@@ -207,11 +197,22 @@ export default class extends Slide<Context> {
     this.complete();
   }
   protected getDts(): string {
-    return 'declare const lights: ElementNode<AttrsLike & LightAttrs>;';
+    return `
+    declare const lights: ElementNode<AttrsLike & LightAttrs>;
+    declare const stage: ElementNode<AttrsLike & LightAttrs>;
+    declare const phone: ElementNode<AttrsLike & LightAttrs>;
+    declare const tv: ElementNode<AttrsLike & LightAttrs>;
+    declare const computer: ElementNode<AttrsLike & LightAttrs>;
+    declare const calculator: ElementNode<AttrsLike & LightAttrs>;
+    `;
   }
 
   dispose(): void {
     super.dispose();
     this.video.pause();
+  }
+  setupRuntime(context: RunContext): void {
+    super.setupRuntime(context);
+    this.runtime.camera.position.set(0, 0.5, 2);
   }
 }

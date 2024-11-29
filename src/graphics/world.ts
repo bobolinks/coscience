@@ -63,6 +63,8 @@ export class World extends EventEmitter<WorldEventMap> {
   ) {
     super();
 
+    Sound.defaultListener = this.listener;
+
     // clock
     this.clock = new Clock();
 
@@ -132,9 +134,10 @@ export class World extends EventEmitter<WorldEventMap> {
     if (this.currentScene) {
       this.root.add(this.currentScene.native);
       this.currentScene.resize(staticSize.width, staticSize.height);
-      this.currentScene.emit('entered');
       this.currentScene.setupRuntime(this.context);
+      this.currentScene.emit('entered');
     }
+    this.controls.update();
   }
   resize(width: number, height: number) {
     if (!this.dom) {
@@ -288,8 +291,8 @@ export class World extends EventEmitter<WorldEventMap> {
 function elFromObject(object: Object3D) {
   let o: any = object;
   do {
-    if (o.owner) {
-      return o.owner;
+    if (o.userData.owner) {
+      return o.userData.owner;
     }
   } while ((o = o.parent));
 }

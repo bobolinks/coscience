@@ -88,13 +88,16 @@ export class Element<T extends Object3D = Object3D, P extends PropsLike = PropsL
 
   removeFromParent() {
     if (!this.parent) {
+      if (this.native.parent) {
+        this.native.removeFromParent();
+      }
       return;
     }
     return this.parent.remove(this);
   }
 
   dispose() {
-    this.clearAnimations();
+    this.clearAnimations(1);
     this.children.forEach(child => child.dispose());
   }
 

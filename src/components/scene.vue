@@ -13,7 +13,7 @@
       <canvas ref="canvas" class="canvas"></canvas>
       <label class="text-nowrap subtitle">{{ worldProps.subtitle }}</label>
       <video id="videoShared" loop crossOrigin="anonymous" playsinline style="display: none">
-        <source src="/assets/textures/sintel.mp4" />
+        <source src="/assets/videos/sintel.mp4" />
       </video>
     </div>
   </div>

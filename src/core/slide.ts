@@ -39,14 +39,14 @@ export class Slide<R extends RunContext = RunContext, P extends PropsLike = Prop
     clearLib(`slide-${this.sid}`);
   }
 
-  play() {
+  async play() {
     if (this.isPlaying) {
       return false;
     }
     this.isPlaying = true;
     this.emit('play');
     try {
-      this.main();
+      await this.main();
     } catch (code: any) {
       console.log(code);
     }
